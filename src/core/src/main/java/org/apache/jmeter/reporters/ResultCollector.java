@@ -598,11 +598,13 @@ public class ResultCollector extends AbstractListenerElement implements SampleLi
                 log.debug("Closing: {}", key);
                 writeFileEnd(value.pw, value.config);
                 value.pw.close();
-                if (value.pw.checkError()){
+                if (value.pw.checkError()) {
                     log.warn("Problem detected during use of {}", key);
                 }
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 log.error("Error closing file {}", key, ex);
+            } finally {
+                SaveService.removeWriter(value.pw);
             }
         }
         files.clear();

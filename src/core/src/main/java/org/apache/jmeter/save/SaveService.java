@@ -36,6 +36,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.thoughtworks.xstream.io.HierarchicalStreamDriver;
+
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -78,8 +83,16 @@ public class SaveService {
     public static final String TEST_CLASS_NAME = "TestClassName"; // $NON-NLS-1$
 
     private static final class XStreamWrapper extends XStream {
-        private XStreamWrapper(ReflectionProvider reflectionProvider) {
-            super(reflectionProvider);
+        private final HierarchicalStreamDriver driver;
+        private final ConcurrentHashMap<Writer, HierarchicalStreamWriter> writers = new ConcurrentHashMap<>();
+
+        private XStreamWrapper(ReflectionProvider reflectionProvider, HierarchicalStreamDriver driver) {
+            super(reflectionProvider, driver);
+            this.driver = driver;
+        }
+
+        public HierarchicalStreamWriter getDriverWriter(Writer output) {
+            return writers.computeIfAbsent(output, v -> driver.createWriter(output));
         }
 
         // Override wrapMapper in order to insert the Wrapper in the chain
@@ -87,31 +100,31 @@ public class SaveService {
         protected MapperWrapper wrapMapper(MapperWrapper next) {
             // Provide our own aliasing using strings rather than classes
             return new MapperWrapper(next){
-            // Translate alias to classname and then delegate to wrapped class
-            @Override
-            public Class<?> realClass(String alias) {
-                String fullName = aliasToClass(alias);
-                if (fullName != null) {
-                    fullName = NameUpdater.getCurrentName(fullName);
+                // Translate alias to classname and then delegate to wrapped class
+                @Override
+                public Class<?> realClass(String alias) {
+                    String fullName = aliasToClass(alias);
+                    if (fullName != null) {
+                        fullName = NameUpdater.getCurrentName(fullName);
+                    }
+                    return super.realClass(fullName == null ? alias : fullName);
                 }
-                return super.realClass(fullName == null ? alias : fullName);
-            }
-            // Translate to alias and then delegate to wrapped class
-            @Override
-            public String serializedClass(@SuppressWarnings("rawtypes") // superclass does not use types
-                    Class type) {
-                if (type == null) {
-                    return super.serializedClass(null); // was type, but that caused FindBugs warning
-                }
-                String alias = classToAlias(type.getName());
-                return alias == null ? super.serializedClass(type) : alias ;
-                }
+                // Translate to alias and then delegate to wrapped class
+                @Override
+                public String serializedClass(@SuppressWarnings("rawtypes") // superclass does not use types
+                        Class type) {
+                    if (type == null) {
+                        return super.serializedClass(null); // was type, but that caused FindBugs warning
+                    }
+                    String alias = classToAlias(type.getName());
+                    return alias == null ? super.serializedClass(type) : alias ;
+                    }
             };
         }
     }
 
-    private static final XStream JMXSAVER = new XStreamWrapper(new PureJavaReflectionProvider());
-    private static final XStream JTLSAVER = new XStreamWrapper(new PureJavaReflectionProvider());
+    private static final XStreamWrapper JMXSAVER = new XStreamWrapper(new PureJavaReflectionProvider(), new XppDriver());
+    private static final XStreamWrapper JTLSAVER = new XStreamWrapper(new PureJavaReflectionProvider(), new XppDriver());
     static {
         JTLSAVER.setMode(XStream.NO_REFERENCES); // This is needed to stop XStream keeping copies of each class
         JMeterUtils.setupXStreamSecurityPolicy(JMXSAVER);
@@ -300,34 +313,33 @@ public class SaveService {
     // Called by Save function
     public static void saveTree(HashTree tree, OutputStream out) throws IOException {
         // Get the OutputWriter to use
-        OutputStreamWriter outputStreamWriter = getOutputStreamWriter(out);
-        writeXmlHeader(outputStreamWriter);
-        // Use deprecated method, to avoid duplicating code
-        ScriptWrapper wrapper = new ScriptWrapper();
-        wrapper.testPlan = tree;
-        JMXSAVER.toXML(wrapper, outputStreamWriter);
-        outputStreamWriter.write('\n');// Ensure terminated properly
-        outputStreamWriter.close();
+        try (OutputStreamWriter outputStreamWriter = getOutputStreamWriter(out)) {
+            writeXmlHeader(outputStreamWriter);
+            // Use deprecated method, to avoid duplicating code
+            ScriptWrapper wrapper = new ScriptWrapper();
+            wrapper.testPlan = tree;
+            JMXSAVER.toXML(wrapper, outputStreamWriter);
+            outputStreamWriter.write('\n');// Ensure terminated properly
+        }
     }
 
     // Used by Test code
     public static void saveElement(Object el, OutputStream out) throws IOException {
         // Get the OutputWriter to use
-        OutputStreamWriter outputStreamWriter = getOutputStreamWriter(out);
-        writeXmlHeader(outputStreamWriter);
-        // Use deprecated method, to avoid duplicating code
-        JMXSAVER.toXML(el, outputStreamWriter);
-        outputStreamWriter.close();
+        try (OutputStreamWriter outputStreamWriter = getOutputStreamWriter(out)) {
+            writeXmlHeader(outputStreamWriter);
+            // Use deprecated method, to avoid duplicating code
+            JMXSAVER.toXML(el, outputStreamWriter);
+        }
     }
 
     // Used by Test code
     public static Object loadElement(InputStream in) throws IOException {
         // Get the InputReader to use
-        InputStreamReader inputStreamReader = getInputStreamReader(in);
-        // Use deprecated method, to avoid duplicating code
-        Object element = JMXSAVER.fromXML(inputStreamReader);
-        inputStreamReader.close();
-        return element;
+        try (InputStreamReader inputStreamReader = getInputStreamReader(in)) {
+            // Use deprecated method, to avoid duplicating code
+            return JMXSAVER.fromXML(inputStreamReader);
+        }
     }
 
     /**
@@ -338,17 +350,20 @@ public class SaveService {
      * @throws IOException when writing data to output fails
      */
     // Used by ResultCollector.sampleOccurred(SampleEvent event)
-    public static synchronized void saveSampleResult(SampleEvent evt, Writer writer) throws IOException {
+    public static void saveSampleResult(SampleEvent evt, Writer writer) throws IOException {
         DataHolder dh = JTLSAVER.newDataHolder();
         dh.put(SAMPLE_EVENT_OBJECT, evt);
-        // This is effectively the same as saver.toXML(Object, Writer) except we get to provide the DataHolder
-        // Don't know why there is no method for this in the XStream class
-        try {
-            JTLSAVER.marshal(evt.getResult(), new XppDriver().createWriter(writer), dh);
-        } catch(RuntimeException e) {
-            throw new IllegalArgumentException("Failed marshalling:"+(evt.getResult() != null ? showDebuggingInfo(evt.getResult()) : "null"), e);
+        synchronized(writer) {
+            // This is effectively the same as saver.toXML(Object, Writer) except we get to provide the DataHolder
+            // Don't know why there is no method for this in the XStream class
+            try {
+                JTLSAVER.marshal(evt.getResult(), JTLSAVER.getDriverWriter(writer), dh);
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException("Failed marshalling:" + (evt.getResult() != null ? showDebuggingInfo(evt.getResult()) : "null"), e);
+            }
+            writer.write('\n');
+            writer.flush();
         }
-        writer.write('\n');
     }
 
     /**
@@ -405,14 +420,11 @@ public class SaveService {
      * @throws IOException if an I/O error occurs
      */
     public static void loadTestResults(InputStream reader, ResultCollectorHelper resultCollectorHelper) throws IOException {
-        // Get the InputReader to use
-        InputStreamReader inputStreamReader = getInputStreamReader(reader);
         DataHolder dh = JTLSAVER.newDataHolder();
         dh.put(RESULTCOLLECTOR_HELPER_OBJECT, resultCollectorHelper); // Allow TestResultWrapper to feed back the samples
         // This is effectively the same as saver.fromXML(InputStream) except we get to provide the DataHolder
         // Don't know why there is no method for this in the XStream class
-        JTLSAVER.unmarshal(new XppDriver().createReader(reader), null, dh);
-        inputStreamReader.close();
+        JTLSAVER.unmarshal(JTLSAVER.driver.createReader(reader), null, dh);
     }
 
     /**
@@ -437,21 +449,16 @@ public class SaveService {
      * @return the loaded tree
      * @throws IOException if there is a problem reading the file or processing it
      */
-    private static HashTree readTree(InputStream inputStream, File file)
-            throws IOException {
-        ScriptWrapper wrapper = null;
-        try {
-            // Get the InputReader to use
-            InputStreamReader inputStreamReader = getInputStreamReader(inputStream);
-            wrapper = (ScriptWrapper) JMXSAVER.fromXML(inputStreamReader);
-            inputStreamReader.close();
+    private static HashTree readTree(InputStream inputStream, File file) throws IOException {
+        try (InputStreamReader inputStreamReader = getInputStreamReader(inputStream)) {
+            ScriptWrapper wrapper = (ScriptWrapper) JMXSAVER.fromXML(inputStreamReader);
             if (wrapper == null){
                 log.error("Problem loading XML: see above.");
                 return null;
             }
             return wrapper.testPlan;
         } catch (CannotResolveClassException | ConversionException | NoClassDefFoundError e) {
-            if(file != null) {
+            if (file != null) {
                 throw new IllegalArgumentException("Problem loading XML from:'"+file.getAbsolutePath()+"'. \nCause:\n"+
                         ExceptionUtils.getRootCauseMessage(e) +"\n\n Detail:"+e, e);
             } else {
@@ -496,7 +503,6 @@ public class SaveService {
             return Charset.forName(fileEncoding);
         }
         else {
-
             // We use the default character set encoding of the JRE
             log.info("fileEncoding not defined - using JRE default");
             return Charset.defaultCharset();
@@ -540,5 +546,9 @@ public class SaveService {
 
     public static String getVERSION() {
         return VERSION;
+    }
+
+    public static void removeWriter(Writer output) {
+        JTLSAVER.writers.remove(output);
     }
 }
