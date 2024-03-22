@@ -127,6 +127,9 @@ dependencies {
     testFixturesImplementation("org.spockframework:spock-core")
     testFixturesImplementation(projects.src.testkit)
     testFixturesImplementation("org.junit.jupiter:junit-jupiter")
+
+    implementation( "com.formdev:flatlaf" )
+    implementation( "com.formdev:flatlaf-intellij-themes" )
 }
 
 val generatedVersionDir = File(buildDir, "generated/sources/version")

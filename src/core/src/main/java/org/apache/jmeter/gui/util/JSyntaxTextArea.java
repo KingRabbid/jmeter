@@ -53,7 +53,8 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
     private static final long serialVersionUID = 211L;
     private static final Logger log = LoggerFactory.getLogger(JSyntaxTextArea.class);
 
-    private static final Theme DEFAULT_THEME = loadTheme(Theme.class, "themes/default.xml");
+    private static final Theme DEFAULT_THEME = loadTheme(Theme.class, JMeterUtils.getPropDefault("jsyntaxtextarea.theme.default", "themes/default.xml"));
+    private static final Theme DEFAULT_DARK_THEME = loadTheme(Theme.class, JMeterUtils.getPropDefault("jsyntaxtextarea.theme.dark", "themes/dark.xml"));
 
     private final Properties languageProperties = JMeterUtils.loadProperties("org/apache/jmeter/gui/util/textarea.properties"); //$NON-NLS-1$
 
@@ -64,6 +65,7 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
     private static final int MAX_UNDOS = JMeterUtils.getPropDefault("jsyntaxtextarea.maxundos", 50);
     private static final String USER_FONT_FAMILY = JMeterUtils.getPropDefault("jsyntaxtextarea.font.family", null);
     private static final int USER_FONT_SIZE = JMeterUtils.getPropDefault("jsyntaxtextarea.font.size", -1);
+    private static final boolean HIGHLIGHT_OCCURRENCES = JMeterUtils.getPropDefault("jsyntaxtextarea.highlight", true);
 
     private static final HierarchyListener GUTTER_THEME_PATCHER = e -> {
         if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) != 0
@@ -143,7 +145,20 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
      */
     private static void applyTheme(JSyntaxTextArea jSyntaxTextArea) {
         final boolean isDarklafTheme = LookAndFeelCommand.isDarklafTheme();
-        final Theme theme = isDarklafTheme ? new DarklafRSyntaxTheme(jSyntaxTextArea) : DEFAULT_THEME;
+        final boolean isFlatlafTheme = LookAndFeelCommand.isFlatlafTheme();
+        final Theme theme = isDarklafTheme ? new DarklafRSyntaxTheme(jSyntaxTextArea) : (LookAndFeelCommand.isDark() ? DEFAULT_DARK_THEME : DEFAULT_THEME);
+
+        if (isFlatlafTheme) {
+            jSyntaxTextArea.setForeground(UIManager.getColor("TextArea.foreground"));
+            jSyntaxTextArea.setCaretColor(UIManager.getColor("TextArea.caretForeground"));
+            jSyntaxTextArea.setSelectionColor(UIManager.getColor("TextArea.selectionBackground"));
+            jSyntaxTextArea.setSelectedTextColor(UIManager.getColor("TextArea.selectionForeground"));
+            //not set in all themes
+            if (UIManager.getColor("Hyperlink.linkColor") != null)
+                jSyntaxTextArea.setHyperlinkForeground(UIManager.getColor("Hyperlink.linkColor"));
+            //jSyntaxTextArea.setFont(UIManager.getFont("TextArea.font"));
+        }
+
         if (theme != null) {
             theme.apply(jSyntaxTextArea);
             Font font = jSyntaxTextArea.getFont();
@@ -241,14 +256,21 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
         super.setAntiAliasingEnabled(true);
         super.setLineWrap(LINE_WRAP);
         super.setWrapStyleWord(WRAP_STYLE_WORD);
+        super.setMarkOccurrences(HIGHLIGHT_OCCURRENCES);
         this.disableUndo = disableUndo;
+
+        int fontSize = USER_FONT_SIZE > 0 ? USER_FONT_SIZE : getFont().getSize();
+        Font font = getFont();
         if (USER_FONT_FAMILY != null) {
-            int fontSize = USER_FONT_SIZE > 0 ? USER_FONT_SIZE : getFont().getSize();
-            setFont(JMeterUIDefaults.createFont(USER_FONT_FAMILY, Font.PLAIN, fontSize));
-            if (log.isDebugEnabled()) {
-                log.debug("Font is set to: {}", getFont());
-            }
+            font = JMeterUIDefaults.createFont(USER_FONT_FAMILY, Font.PLAIN, fontSize);
+        } else {
+            font = font.deriveFont(font.getStyle(), fontSize);
         }
+        setFont(font);
+        if (log.isDebugEnabled()) {
+            log.debug("Font is set to: {}", getFont());
+        }
+
         if(disableUndo) {
             TextComponentUI.uninstallUndo(this);
             // We need to do this to force recreation of undoManager which

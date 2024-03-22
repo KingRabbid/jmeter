@@ -247,7 +247,7 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
             // Shift down means "horizontal scrolling" on macOS, and we need only vertical one
             if ((e.getModifiersEx() & (ctrlAltMask | InputEvent.SHIFT_DOWN_MASK)) == ctrlAltMask) {
                 e.consume();
-                final float scale = 1.1f;
+                final float scale = JMeterUtils.getPropDefault("zoom_scale", 1.1f);
                 int rotation = e.getWheelRotation();
                 if (rotation > 0) { // DOWN
                     JMeterUtils.applyScaleOnFonts(1.0f / scale);
