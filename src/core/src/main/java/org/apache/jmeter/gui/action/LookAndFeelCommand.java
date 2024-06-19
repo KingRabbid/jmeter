@@ -24,6 +24,8 @@ import java.util.prefs.Preferences;
 
 import javax.swing.*;
 
+import com.formdev.flatlaf.FlatLaf;
+
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.util.JMeterMenuBar;
 import org.apache.jmeter.util.JMeterUtils;
@@ -217,11 +219,20 @@ public class LookAndFeelCommand extends AbstractAction {
     }
 
     public static boolean isFlatlafTheme() {
-        return UIManager.getLookAndFeel().getID().startsWith("Flat"); // $NON-NLS-1$
+        //return UIManager.getLookAndFeel().getID().startsWith("Flat"); // $NON-NLS-1$
+        return UIManager.getLookAndFeel() instanceof FlatLaf;
+        /*
+        try {
+            UIManager.getLookAndFeel().getClass().asSubclass(FlatLaf.class);
+        } catch (ClassCastException e) {
+            return false;
+        }
+        return true;
+         */
     }
 
     public static boolean isDark() {
-        return isDarklafTheme() && Theme.isDark(LafManager.getTheme());
+        return (isDarklafTheme() && Theme.isDark(LafManager.getTheme())) || (isFlatlafTheme() && ((FlatLaf)UIManager.getLookAndFeel()).isDark());
     }
 
     public static void activateLookAndFeel(String command) {
