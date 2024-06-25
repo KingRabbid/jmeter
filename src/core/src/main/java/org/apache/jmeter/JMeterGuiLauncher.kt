@@ -72,8 +72,6 @@ public object JMeterGuiLauncher {
     private fun setupLaF() {
         KerningOptimizer.INSTANCE.maxTextLengthWithKerning =
             JMeterUtils.getPropDefault("text.kerning.max_document_size", 10000)
-        JMeterUIDefaults.INSTANCE.scale =
-            JMeterUtils.getPropDefault("gui.initialZoomScale", 1.0f)
         JMeterUIDefaults.INSTANCE.install()
         val jMeterLaf = LookAndFeelCommand.getPreferredLafCommand()
         try {
@@ -85,6 +83,7 @@ public object JMeterGuiLauncher {
     }
 
     private suspend fun startGuiInternal(testFile: String?) {
+        JMeterUtils.applyHiDPIOnFonts()
         setupLaF()
         val splash = SplashScreen()
         splash.showScreen()
@@ -95,7 +94,6 @@ public object JMeterGuiLauncher {
             yield()
         }
         setProgress(1)
-        JMeterUtils.applyHiDPIOnFonts()
         log.debug("Setup tree")
         setProgress(5)
         val treeModel = JMeterTreeModel()

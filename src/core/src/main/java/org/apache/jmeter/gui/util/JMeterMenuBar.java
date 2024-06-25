@@ -320,6 +320,8 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
     private static JMenu createLaFMenu() {
         JMenu lafMenu = makeMenuRes("appearance", 'L');
         JMenu flatLafSubMenu = new JMenu("FlatLaf Themes");
+        ButtonGroup lafGroup = new ButtonGroup();
+        ButtonGroup flatLafGroup = new ButtonGroup();
         String currentLafCommand = LookAndFeelCommand.getPreferredLafCommand();
         for (LookAndFeelCommand.MenuItem item : LookAndFeelCommand.getMenuItems()) {
             JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(item.getTitle());
@@ -329,8 +331,10 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
                 menuItem.setSelected(true);
             }
             if (item.getCommand().startsWith("laf:com.formdev.flatlaf")) {
+                flatLafGroup.add(menuItem);
                 flatLafSubMenu.add(menuItem);
             } else {
+                lafGroup.add(menuItem);
                 lafMenu.add(menuItem);
             }
         }
