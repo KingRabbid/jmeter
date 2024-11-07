@@ -219,16 +219,7 @@ public class LookAndFeelCommand extends AbstractAction {
     }
 
     public static boolean isFlatlafTheme() {
-        //return UIManager.getLookAndFeel().getID().startsWith("Flat"); // $NON-NLS-1$
         return UIManager.getLookAndFeel() instanceof FlatLaf;
-        /*
-        try {
-            UIManager.getLookAndFeel().getClass().asSubclass(FlatLaf.class);
-        } catch (ClassCastException e) {
-            return false;
-        }
-        return true;
-         */
     }
 
     public static boolean isDark() {

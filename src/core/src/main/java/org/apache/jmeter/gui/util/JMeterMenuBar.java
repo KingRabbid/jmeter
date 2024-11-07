@@ -40,8 +40,6 @@ import javax.swing.MenuElement;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import com.formdev.flatlaf.intellijthemes.FlatAllIJThemes;
-
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.action.ActionRouter;
@@ -55,6 +53,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.LocaleChangeEvent;
 import org.apache.jmeter.util.LocaleChangeListener;
 import org.apache.jmeter.util.SSLManager;
+import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.reflect.LogAndIgnoreServiceLoadExceptionHandler;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.logging.log4j.Level;
@@ -336,6 +335,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
             }
             lafGroup.add(menuItem);
         }
+        GuiUtils.makeScrollableMenu(flatLafSubMenu);
         lafMenu.addSeparator();
         lafMenu.add(flatLafSubMenu);
         return lafMenu;

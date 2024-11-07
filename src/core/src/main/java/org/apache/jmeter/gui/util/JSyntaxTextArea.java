@@ -20,8 +20,10 @@ package org.apache.jmeter.gui.util;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
+import java.awt.event.ItemEvent;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -35,6 +37,7 @@ import org.apache.jorphan.gui.JFactory;
 import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.apache.jorphan.gui.ui.TextComponentUI;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RUndoManager;
@@ -157,12 +160,13 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
             if (UIManager.getColor("Hyperlink.linkColor") != null)
                 jSyntaxTextArea.setHyperlinkForeground(UIManager.getColor("Hyperlink.linkColor"));
             //jSyntaxTextArea.setFont(UIManager.getFont("TextArea.font"));
+            jSyntaxTextArea.setFractionalFontMetricsEnabled(true);
         }
 
         if (theme != null) {
             theme.apply(jSyntaxTextArea);
-            Font font = jSyntaxTextArea.getFont();
             float scale = JMeterUIDefaults.INSTANCE.getScale();
+            Font font = jSyntaxTextArea.getFont();
             if (Math.abs(scale - 1.0f) > 0.01) {
                 font = font.deriveFont(font.getSize2D() * scale);
                 jSyntaxTextArea.setFont(font);
