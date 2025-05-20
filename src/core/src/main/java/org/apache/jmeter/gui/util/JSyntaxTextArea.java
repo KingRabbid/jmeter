@@ -159,9 +159,8 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
             //not set in all themes
             if (UIManager.getColor("Hyperlink.linkColor") != null)
                 jSyntaxTextArea.setHyperlinkForeground(UIManager.getColor("Hyperlink.linkColor"));
-            //jSyntaxTextArea.setFont(UIManager.getFont("TextArea.font"));
-            jSyntaxTextArea.setFractionalFontMetricsEnabled(true);
         }
+        jSyntaxTextArea.setFractionalFontMetricsEnabled(true);
 
         if (theme != null) {
             theme.apply(jSyntaxTextArea);
