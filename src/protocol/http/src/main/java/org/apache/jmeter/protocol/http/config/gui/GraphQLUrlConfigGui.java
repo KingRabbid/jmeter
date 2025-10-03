@@ -166,12 +166,12 @@ public class GraphQLUrlConfigGui extends UrlConfigGui {
 
         queryContent = JSyntaxTextArea.getInstance(26, 50);
         queryContent.setInitialText("");
-        paramPanel.add(JMeterUtils.getResString("graphql_query"), JTextScrollPane.getInstance(queryContent));
+        paramPanel.add(JMeterUtils.getResString("graphql_query"), JTextScrollPane.getInstance(queryContent, true));
 
         variablesContent = JSyntaxTextArea.getInstance(26, 50);
         variablesContent.setLanguage("json");
         variablesContent.setInitialText("");
-        paramPanel.add(JMeterUtils.getResString("graphql_variables"), JTextScrollPane.getInstance(variablesContent));
+        paramPanel.add(JMeterUtils.getResString("graphql_variables"), JTextScrollPane.getInstance(variablesContent, true));
 
         return paramPanel;
     }

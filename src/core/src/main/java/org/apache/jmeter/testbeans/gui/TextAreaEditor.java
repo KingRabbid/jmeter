@@ -102,16 +102,29 @@ public class TextAreaEditor extends PropertyEditorSupport implements FocusListen
     /** {@inheritDoc} */
     @Override
     public void setAsText(String text) throws IllegalArgumentException {
+        //this to remove the caret position bug => always set caret position to 0
+        /*
+        int currentCaretPosition = textUI.getCaretPosition();
         textUI.setInitialText(text);
-        textUI.setCaretPosition(0);
+        if (currentCaretPosition > 0) {
+            if (currentCaretPosition <= text.length())
+                textUI.setCaretPosition(currentCaretPosition);
+            else
+                currentCaretPosition = 0; // reset caret position if it was out of bounds
+            caretPosition = currentCaretPosition;//save previous position
+        }
+         */
     }
 
     /** {@inheritDoc} */
     @Override
     public void setValue(Object value) {
+        int caretPosition = textUI.getCaretPosition();
         if (value != null) {
             textUI.setInitialText(value.toString());
-            textUI.setCaretPosition(0);
+            if (caretPosition >= 0 && caretPosition <= value.toString().length()) {
+                textUI.setCaretPosition(caretPosition);
+            }
         } else {
             textUI.setInitialText("");
         }

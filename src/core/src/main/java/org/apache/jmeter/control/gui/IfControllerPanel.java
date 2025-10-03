@@ -199,11 +199,12 @@ public class IfControllerPanel extends AbstractControllerGui implements ChangeLi
         conditionLabel = new JLabel(JMeterUtils.getResString("if_controller_label")); // $NON-NLS-1$
         conditionPanel.add(conditionLabel, "top");
         conditionLabel.setName("if_controller_label"); // $NON-NLS-1$
+        JFactory.small(conditionLabel);
 
         // Condition
         theCondition = JSyntaxTextArea.getInstance(5, 50);
         conditionLabel.setLabelFor(theCondition);
-        conditionPanel.add(JTextScrollPane.getInstance(theCondition), "push, grow");
+        conditionPanel.add(JTextScrollPane.getInstance(theCondition, true), "push, grow");
 
         JLabel ifControllerTipLabel = new JLabel(JMeterUtils.getResString("if_controller_tip")); // $NON-NLS-1$
         useLastSampleStatusButton = new JButton(JMeterUtils.getResString("if_controller_use_last_sample_ok")); // $NON-NLS-1$
@@ -211,6 +212,7 @@ public class IfControllerPanel extends AbstractControllerGui implements ChangeLi
         useLastSampleStatusButton.addActionListener(this);
         conditionPanel.add(useLastSampleStatusButton);
         conditionPanel.add(ifControllerTipLabel);
+        JFactory.small(ifControllerTipLabel);
 
         // Use expression instead of Javascript
         useExpression = new JCheckBox(JMeterUtils.getResString("if_controller_expression")); // $NON-NLS-1$

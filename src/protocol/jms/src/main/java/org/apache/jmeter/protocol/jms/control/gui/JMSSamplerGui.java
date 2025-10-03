@@ -279,7 +279,7 @@ public class JMSSamplerGui extends AbstractSamplerGui {
 
         JPanel messageContentPanel = new JPanel(new BorderLayout());
         messageContentPanel.add(new JLabel(JMeterUtils.getResString("jms_msg_content")), BorderLayout.NORTH);
-        messageContentPanel.add(JTextScrollPane.getInstance(messageContent), BorderLayout.CENTER);
+        messageContentPanel.add(JTextScrollPane.getInstance(messageContent, true), BorderLayout.CENTER);
         messagePanel.add(messageContentPanel, BorderLayout.CENTER);
 
         jmsPropertiesPanel = new JMSPropertiesPanel(); // $NON-NLS-1$

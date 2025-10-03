@@ -20,10 +20,8 @@ package org.apache.jmeter.gui.util;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.HeadlessException;
-import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
-import java.awt.event.ItemEvent;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -37,8 +35,9 @@ import org.apache.jorphan.gui.JFactory;
 import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.apache.jorphan.gui.ui.TextComponentUI;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
+import org.fife.ui.rsyntaxtextarea.Style;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RUndoManager;
 import org.slf4j.Logger;
@@ -69,6 +68,7 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
     private static final String USER_FONT_FAMILY = JMeterUtils.getPropDefault("jsyntaxtextarea.font.family", null);
     private static final int USER_FONT_SIZE = JMeterUtils.getPropDefault("jsyntaxtextarea.font.size", -1);
     private static final boolean HIGHLIGHT_OCCURRENCES = JMeterUtils.getPropDefault("jsyntaxtextarea.highlight", true);
+    private static final int TAB_SIZE = JMeterUtils.getPropDefault("jsyntaxtextarea.tabsize", 4);
 
     private static final HierarchyListener GUTTER_THEME_PATCHER = e -> {
         if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) != 0
@@ -98,6 +98,7 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
     public static JSyntaxTextArea getInstance(int rows, int cols, boolean disableUndo) {
         try {
             JSyntaxTextArea jSyntaxTextArea = new JSyntaxTextArea(rows, cols, disableUndo);
+            jSyntaxTextArea.createPopupMenu();
             JFactory.withDynamic(jSyntaxTextArea, JSyntaxTextArea::applyTheme);
             // Gutter styling is only applied if the text area is contained in a scroll pane.
             jSyntaxTextArea.addHierarchyListener(GUTTER_THEME_PATCHER);
@@ -151,31 +152,53 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
         final boolean isFlatlafTheme = LookAndFeelCommand.isFlatlafTheme();
         final Theme theme = isDarklafTheme ? new DarklafRSyntaxTheme(jSyntaxTextArea) : (LookAndFeelCommand.isDark() ? DEFAULT_DARK_THEME : DEFAULT_THEME);
 
+        // Calculate scaled font size
+        float scale = JMeterUIDefaults.INSTANCE.getFontScale();
+        Font baseFont;
+        if (USER_FONT_FAMILY != null) {
+            baseFont = JMeterUIDefaults.createFont(USER_FONT_FAMILY, Font.PLAIN, USER_FONT_SIZE > 0 ? USER_FONT_SIZE : 12);
+        } else {
+            baseFont = jSyntaxTextArea.getFont();
+        }
+        if (Math.abs(scale - 1.0f) > 0.01) {
+            baseFont = baseFont.deriveFont(baseFont.getSize2D() * scale);
+        }
+
+        // Apply theme first
+        if (theme != null) {
+            theme.apply(jSyntaxTextArea);
+        }
+
+        // Apply scaled font to all token types
+        SyntaxScheme scheme = jSyntaxTextArea.getSyntaxScheme();
+        for (int i = 0; i < scheme.getStyleCount(); i++) {
+            Style style = scheme.getStyle(i);
+            if (style != null) {
+                if (style.font != null) {
+                    // Keep the style (bold/italic) but use scaled size
+                    style.font = style.font.deriveFont(baseFont.getSize2D());
+                } else {
+                    style.font = baseFont;
+                }
+            }
+        }
+        jSyntaxTextArea.setFont(baseFont);
+        jSyntaxTextArea.setSyntaxScheme(scheme);
+        jSyntaxTextArea.setFractionalFontMetricsEnabled(true);
+
         if (isFlatlafTheme) {
             jSyntaxTextArea.setForeground(UIManager.getColor("TextArea.foreground"));
             jSyntaxTextArea.setCaretColor(UIManager.getColor("TextArea.caretForeground"));
             jSyntaxTextArea.setSelectionColor(UIManager.getColor("TextArea.selectionBackground"));
             jSyntaxTextArea.setSelectedTextColor(UIManager.getColor("TextArea.selectionForeground"));
-            //not set in all themes
-            if (UIManager.getColor("Hyperlink.linkColor") != null)
+            if (UIManager.getColor("Hyperlink.linkColor") != null) {
                 jSyntaxTextArea.setHyperlinkForeground(UIManager.getColor("Hyperlink.linkColor"));
-        }
-        jSyntaxTextArea.setFractionalFontMetricsEnabled(true);
-
-        if (theme != null) {
-            theme.apply(jSyntaxTextArea);
-            float scale = JMeterUIDefaults.INSTANCE.getScale();
-            Font font = jSyntaxTextArea.getFont();
-            if (Math.abs(scale - 1.0f) > 0.01) {
-                font = font.deriveFont(font.getSize2D() * scale);
-                jSyntaxTextArea.setFont(font);
             }
         }
+
         if (!isDarklafTheme) {
-            // Darklaf themes provide a custom background color for editors, so we don't overwrite it.
             Color color = UIManager.getColor("TextArea.background");
             if (color != null) {
-                // Pretend syntax textarea theme was designed for the current LaF
                 jSyntaxTextArea.setBackground(color);
             }
         }
@@ -260,7 +283,18 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
         super.setLineWrap(LINE_WRAP);
         super.setWrapStyleWord(WRAP_STYLE_WORD);
         super.setMarkOccurrences(HIGHLIGHT_OCCURRENCES);
+        super.setTabSize(TAB_SIZE);
         this.disableUndo = disableUndo;
+
+        // Add component listener to handle window resizing
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                // Ensure text wraps to the new width
+                revalidate();
+                repaint();
+            }
+        });
 
         int fontSize = USER_FONT_SIZE > 0 ? USER_FONT_SIZE : getFont().getSize();
         Font font = getFont();

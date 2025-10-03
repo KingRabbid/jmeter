@@ -1380,7 +1380,7 @@ public class JMeterUtils implements UnitTestManager {
     @API(since = "5.3", status = API.Status.DEPRECATED)
     public static void applyScaleOnFonts(final float scale) {
         JMeterUIDefaults defaults = JMeterUIDefaults.INSTANCE;
-        defaults.setScale(defaults.getScale() * scale);
+        defaults.setFontScale(defaults.getFontScale() * scale);
     }
 
     /**

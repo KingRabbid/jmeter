@@ -20,6 +20,7 @@ package org.apache.jmeter.visualizers;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.Document;
 import org.apache.jmeter.util.JMeterUtils;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +44,9 @@ public class RenderAsDocument extends SamplerResultTab implements ResultRenderer
 
     private void showDocumentResponse(SampleResult sampleResult) {
         String response = Document.getTextFromDocument(sampleResult.getResponseData());
-
-        results.setContentType("text/plain"); // $NON-NLS-1$
+        results.setSyntaxEditingStyle(getSyntaxStyle());
+        results.setLanguage(getSyntaxStyle());
+        //results.setContentType("text/plain"); // $NON-NLS-1$
         setTextOptimized(response);
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
@@ -56,4 +58,8 @@ public class RenderAsDocument extends SamplerResultTab implements ResultRenderer
         return JMeterUtils.getResString("view_results_render_document"); // $NON-NLS-1$
     }
 
+    @Override
+    protected String getSyntaxStyle() {
+        return SyntaxConstants.SYNTAX_STYLE_NONE;
+    }
 }

@@ -19,6 +19,7 @@ package org.apache.jmeter.visualizers;
 
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.jsoup.Jsoup;
 
 import com.google.auto.service.AutoService;
@@ -34,7 +35,9 @@ public class RenderAsHTMLFormatted extends SamplerResultTab implements ResultRen
     }
 
     private void showHTMLFormattedResponse(String response) {
-        results.setContentType("text/plain"); // $NON-NLS-1$
+        results.setSyntaxEditingStyle(getSyntaxStyle());
+        results.setLanguage(getSyntaxStyle());
+        //results.setContentType("text/plain"); // $NON-NLS-1$
         setTextOptimized(response == null ? "" : Jsoup.parse(response).html()); // $NON-NLS-1$
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
@@ -49,4 +52,8 @@ public class RenderAsHTMLFormatted extends SamplerResultTab implements ResultRen
         return JMeterUtils.getResString("view_results_render_html_formatted"); // $NON-NLS-1$
     }
 
+    @Override
+    protected String getSyntaxStyle() {
+        return SyntaxConstants.SYNTAX_STYLE_HTML;
+    }
 }

@@ -31,6 +31,8 @@ import net.minidev.json.parser.ParseException;
 
 import com.google.auto.service.AutoService;
 
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+
 @AutoService(ResultRenderer.class)
 public class RenderAsJSON extends SamplerResultTab implements ResultRenderer {
     private static final String TAB_SEPARATOR = "    "; //$NON-NLS-1$
@@ -43,7 +45,9 @@ public class RenderAsJSON extends SamplerResultTab implements ResultRenderer {
     }
 
     private void showRenderJSONResponse(String response) {
-        results.setContentType("text/plain"); // $NON-NLS-1$
+        //results.setContentType("text/plain"); // $NON-NLS-1$
+        results.setSyntaxEditingStyle(getSyntaxStyle());
+        results.setLanguage(getSyntaxStyle());
         setTextOptimized(response == null ? "" : prettyJSON(response));
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
@@ -81,6 +85,11 @@ public class RenderAsJSON extends SamplerResultTab implements ResultRenderer {
             return json;
         }
         return json;
+    }
+
+    @Override
+    protected String getSyntaxStyle() {
+        return SyntaxConstants.SYNTAX_STYLE_JSON;
     }
 
     /** {@inheritDoc} */

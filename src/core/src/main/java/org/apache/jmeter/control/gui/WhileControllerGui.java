@@ -130,7 +130,7 @@ public class WhileControllerGui extends AbstractControllerGui {
         // Condition
         // This means exit if last sample failed
         theCondition = JSyntaxTextArea.getInstance(5, 50);
-        JTextScrollPane theConditionJSP = JTextScrollPane.getInstance(theCondition);
+        JTextScrollPane theConditionJSP = JTextScrollPane.getInstance(theCondition, true);
         conditionPanel.add(JMeterUtils.labelFor(theConditionJSP, "while_controller_label"), "top");
         theCondition.setName(CONDITION);
         conditionPanel.add(theConditionJSP, "push, grow");

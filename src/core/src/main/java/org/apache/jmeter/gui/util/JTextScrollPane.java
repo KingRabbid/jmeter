@@ -17,7 +17,10 @@
 
 package org.apache.jmeter.gui.util;
 
+import org.apache.jmeter.util.JMeterUtils;
 import org.fife.ui.rtextarea.RTextScrollPane;
+
+import java.awt.*;
 
 
 /**
@@ -34,6 +37,7 @@ public class JTextScrollPane extends RTextScrollPane {
         // for use by test code only
     }
 
+    /*
     public static JTextScrollPane getInstance(JSyntaxTextArea scriptField, boolean foldIndicatorEnabled) {
         try {
             return new JTextScrollPane(scriptField, foldIndicatorEnabled);
@@ -45,6 +49,7 @@ public class JTextScrollPane extends RTextScrollPane {
             }
         }
     }
+     */
 
     public static JTextScrollPane getInstance(JSyntaxTextArea scriptField) {
         try {
@@ -77,6 +82,63 @@ public class JTextScrollPane extends RTextScrollPane {
     public JTextScrollPane(JSyntaxTextArea scriptField, boolean foldIndicatorEnabled) {
         super(scriptField);
         super.setFoldIndicatorEnabled(foldIndicatorEnabled);
+    }
+
+    public static JTextScrollPane getInstance(JSyntaxTextArea scriptField, boolean foldIndicatorEnabled) {
+        try {
+            JTextScrollPane scrollPane = new JTextScrollPane(scriptField, foldIndicatorEnabled);
+
+            javax.swing.JToolBar toolBar = new javax.swing.JToolBar();
+            toolBar.setFloatable(false);
+
+            // Line wrap Checkbox
+            javax.swing.JCheckBox lineWrapCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_wrap"));
+            lineWrapCheck.setSelected(scriptField.getLineWrap());
+            lineWrapCheck.addActionListener(e -> scriptField.setLineWrap(lineWrapCheck.isSelected()));
+
+            // Line wrap word Checkbox
+            javax.swing.JCheckBox wrapStyleCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_wrap_style"));
+            wrapStyleCheck.setSelected(scriptField.getWrapStyleWord());
+            wrapStyleCheck.addActionListener(e -> scriptField.setWrapStyleWord(wrapStyleCheck.isSelected()));
+
+            // EOL visible Checkbox
+            javax.swing.JCheckBox eolCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_eol"));
+            eolCheck.setSelected(scriptField.getEOLMarkersVisible());
+            eolCheck.addActionListener(e -> scriptField.setEOLMarkersVisible(eolCheck.isSelected()));
+
+            // Whhitespace visible Checkbox
+            javax.swing.JCheckBox whitespaceCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_whitespace"));
+            whitespaceCheck.setSelected(scriptField.isWhitespaceVisible());
+            whitespaceCheck.addActionListener(e -> scriptField.setWhitespaceVisible(whitespaceCheck.isSelected()));
+
+            // Line Numbers Checkbox
+            javax.swing.JCheckBox lineNumbersCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_line_number"));
+            lineNumbersCheck.setSelected(scrollPane.getLineNumbersEnabled());
+            lineNumbersCheck.addActionListener(e -> scrollPane.setLineNumbersEnabled(lineNumbersCheck.isSelected()));
+
+            // Code Folding Checkbox
+            javax.swing.JCheckBox codeFoldingCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_code_folding"));
+            codeFoldingCheck.setSelected(scrollPane.isFoldIndicatorEnabled());
+            codeFoldingCheck.addActionListener(e -> scrollPane.setFoldIndicatorEnabled(codeFoldingCheck.isSelected()));
+
+            // Add components to the toolbar
+            toolBar.add(lineWrapCheck);
+            toolBar.add(wrapStyleCheck);
+            toolBar.add(eolCheck);
+            toolBar.add(whitespaceCheck);
+            toolBar.add(lineNumbersCheck);
+            toolBar.add(codeFoldingCheck);
+
+            scrollPane.setColumnHeaderView(toolBar);
+
+            return scrollPane;
+        } catch (NullPointerException npe) {
+            if ("true".equals(System.getProperty("java.awt.headless"))) {
+                return new JTextScrollPane();
+            } else {
+                throw npe;
+            }
+        }
     }
 
 }

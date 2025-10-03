@@ -17,12 +17,16 @@
 
 package org.apache.jmeter.gui.util;
 
+import java.awt.Container;
 import java.awt.Component;
 import java.io.File;
 import java.util.Arrays;
 
-import javax.swing.JFileChooser;
+import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.gui.GuiPackage;
@@ -192,6 +196,11 @@ public final class FileDialoger {
            jfc.setAcceptAllFileFilterUsed(true);
            jfc.setFileFilter(currentFilter);
        }
+       Action details = jfc.getActionMap().get("viewTypeDetails");
+       details.actionPerformed(null);
+       jfc.rescanCurrentDirectory();
+       autoSizeColumnsLogic(jfc);
+       enableAutoSizeColumns(jfc);
        int retVal = jfc.showOpenDialog(parentComponent);
        lastJFCDirectory = jfc.getCurrentDirectory().getAbsolutePath();
 
@@ -276,6 +285,12 @@ public final class FileDialoger {
             jfc.addChoosableFileFilter(new JMeterFileFilter(new String[] { ext }));
         }
 
+        Action details = jfc.getActionMap().get("viewTypeDetails");
+        details.actionPerformed(null);
+        jfc.rescanCurrentDirectory();
+        autoSizeColumnsLogic(jfc);
+        enableAutoSizeColumns(jfc);
+
         int retVal = jfc.showSaveDialog(GuiPackage.getInstance().getMainFrame());
         jfc.setDialogTitle(null);
         lastJFCDirectory = jfc.getCurrentDirectory().getAbsolutePath();
@@ -299,5 +314,72 @@ public final class FileDialoger {
      */
     public static void setLastJFCDirectory(String lastJFCDirectory) {
         FileDialoger.lastJFCDirectory = lastJFCDirectory;
+    }
+    // Java
+    private static void enableAutoSizeColumns(JFileChooser chooser) {
+        chooser.addPropertyChangeListener(evt -> {
+            if (Arrays.asList(JFileChooser.DIRECTORY_CHANGED_PROPERTY).contains(evt.getPropertyName())) {
+                autoSizeColumnsLogic(chooser);
+            }
+        });
+    }
+
+    private static Component findDetailsTable(Container parent) {
+        for (Component comp : parent.getComponents()) {
+            if (comp instanceof JTable) {
+                return comp;
+            } else if (comp instanceof Container) {
+                Component result = findDetailsTable((Container) comp);
+                if (result != null) return result;
+            }
+        }
+        return null;
+    }
+
+    private static void autoSizeColumnsLogic(JFileChooser chooser) {
+        Component tableComp = findDetailsTable(chooser);
+        if (tableComp instanceof JTable) {
+            JTable table = (JTable) tableComp;
+            TableColumnModel columnModel = table.getColumnModel();
+
+            // First pass: Calculate optimal width for all columns except the first one
+            int totalOtherColsWidth = 0;
+            for (int col = 1; col < columnModel.getColumnCount(); col++) {
+                TableColumn column = columnModel.getColumn(col);
+
+                // Check header width
+                TableCellRenderer headerRenderer = column.getHeaderRenderer();
+                if (headerRenderer == null) {
+                    headerRenderer = table.getTableHeader().getDefaultRenderer();
+                }
+                Component headerComp = headerRenderer.getTableCellRendererComponent(
+                        table, column.getHeaderValue(), false, false, 0, col);
+                int maxWidth = headerComp.getPreferredSize().width;
+
+                // Check data width for each row
+                for (int row = 0; row < table.getRowCount(); row++) {
+                    TableCellRenderer renderer = table.getCellRenderer(row, col);
+                    Component comp = table.prepareRenderer(renderer, row, col);
+                    maxWidth = Math.max(comp.getPreferredSize().width, maxWidth);
+                }
+
+                // Add some padding and set column width
+                int finalWidth = maxWidth + 5;
+                column.setPreferredWidth(finalWidth);
+                totalOtherColsWidth += finalWidth;
+            }
+
+            // Second pass: Set first column width to fill remaining space
+            if (columnModel.getColumnCount() > 0) {
+                int viewportWidth = table.getParent() instanceof JViewport
+                        ? ((JViewport) table.getParent()).getWidth()
+                        : table.getWidth();
+
+                // Account for possible vertical scrollbar width
+                int scrollbarWidth = 5; // Approximate scrollbar width
+                int firstColWidth = viewportWidth - totalOtherColsWidth - scrollbarWidth - 5; // 1 for padding
+                columnModel.getColumn(0).setPreferredWidth(firstColWidth);
+            }
+        }
     }
 }

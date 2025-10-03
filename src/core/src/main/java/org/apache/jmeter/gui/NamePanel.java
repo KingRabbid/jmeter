@@ -20,6 +20,7 @@ package org.apache.jmeter.gui;
 import static org.apiguardian.api.API.Status.INTERNAL;
 
 import java.awt.BorderLayout;
+import java.awt.Insets;
 import java.util.Collection;
 
 import javax.swing.JLabel;
@@ -30,6 +31,7 @@ import javax.swing.JTextField;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 import org.apiguardian.api.API;
 
 public class NamePanel extends JPanel implements JMeterGUIComponent {
@@ -58,6 +60,11 @@ public class NamePanel extends JPanel implements JMeterGUIComponent {
         JLabel nameLabel = new JLabel(JMeterUtils.getResString("name")); // $NON-NLS-1$
         nameLabel.setName("name");
         nameLabel.setLabelFor(nameField);
+        JFactory.small(nameField);
+        JFactory.small(nameLabel);
+
+        // Set smaller margins for the text field
+        //nameField.setMargin(new Insets(1, 2, 1, 2)); // Reduced from default margins
 
         add(nameLabel, BorderLayout.WEST);
         add(nameField, BorderLayout.CENTER);

@@ -46,6 +46,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.XPathUtil;
 import org.apache.jorphan.util.JOrphanUtils;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
@@ -74,7 +75,9 @@ public class RenderAsXML extends SamplerResultTab
     }
 
     private void showRenderXMLResponse(SampleResult res) {
-        results.setContentType("text/xml"); // $NON-NLS-1$
+        results.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_XML);
+        results.setLanguage(SyntaxConstants.SYNTAX_STYLE_XML);
+        //results.setContentType("text/xml"); // $NON-NLS-1$
         results.setCaretPosition(0);
         byte[] source = res.getResponseData();
         final ByteArrayInputStream baIS = new ByteArrayInputStream(source);

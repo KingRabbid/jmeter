@@ -254,6 +254,7 @@ public class AssertionGui extends AbstractAssertionGui {
 
         if(model.getCustomFailureMessage() != null) {
             alternativeFailureMessage.setText(model.getCustomFailureMessage());
+            alternativeFailureMessage.setCaretPosition(0);
         }
         if (model.isContainsType()) {
             containsBox.setSelected(true);
@@ -463,10 +464,14 @@ public class AssertionGui extends AbstractAssertionGui {
     }
 
     private JPanel createCustomAssertionMessagePanel() {
-        JPanel panel = new JPanel();
+        JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("assertion_custom_message"))); //$NON-NLS-1$
-        alternativeFailureMessage = JSyntaxTextArea.getInstance(3, 80);
-        panel.add(JTextScrollPane.getInstance(alternativeFailureMessage));
+        alternativeFailureMessage = JSyntaxTextArea.getInstance(3, 20);
+        alternativeFailureMessage.setLineWrap(true);
+        alternativeFailureMessage.setWrapStyleWord(true);
+        JScrollPane scrollPane = JTextScrollPane.getInstance(alternativeFailureMessage);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        panel.add(scrollPane, BorderLayout.CENTER);
         return panel;
     }
 

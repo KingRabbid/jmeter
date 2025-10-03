@@ -265,10 +265,11 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         titlePanel.add(createTitleLabel(), "span 2");
 
         JTextField nameField = namePanel.getNameField();
+        JFactory.small(nameField);
         titlePanel.add(labelFor(nameField, "name"));
         titlePanel.add(nameField);
 
-        titlePanel.add(labelFor(nameField, "testplan_comments"));
+        titlePanel.add(labelFor(commentField, "testplan_comments"));
         commentField.setWrapStyleWord(true);
         commentField.setLineWrap(true);
         titlePanel.add(commentField);

@@ -44,6 +44,8 @@ public final class JSyntaxSearchToolBar implements ActionListener {
 
     private JTextField searchField;
 
+    private JCheckBox backwardsCB;
+
     private JCheckBox regexCB;
 
     private JCheckBox matchCaseCB;
@@ -62,12 +64,16 @@ public final class JSyntaxSearchToolBar implements ActionListener {
     }
 
     private void init() {
-        this.searchField = new JTextField(30);
+        this.searchField = new JTextField(0);
         JFactory.small(searchField);
         final JButton findButton = new JButton(JMeterUtils.getResString("search_text_button_find"));
         JFactory.small(findButton);
         findButton.setActionCommand(FIND_ACTION);
         findButton.addActionListener(this);
+
+        backwardsCB = new JCheckBox(JMeterUtils.getResString("search_text_chkbox_backwards"));
+        JFactory.small(backwardsCB);
+
         regexCB = new JCheckBox(JMeterUtils.getResString("search_text_chkbox_regexp"));
         JFactory.small(regexCB);
 
@@ -79,6 +85,7 @@ public final class JSyntaxSearchToolBar implements ActionListener {
         JFactory.small(toolBar);
         toolBar.add(searchField);
         toolBar.add(findButton);
+        toolBar.add(backwardsCB);
         toolBar.add(matchCaseCB);
         toolBar.add(regexCB);
         searchField.addActionListener(e -> findButton.doClick(0));
@@ -95,7 +102,7 @@ public final class JSyntaxSearchToolBar implements ActionListener {
 
         if (!text.isEmpty()) {
             SearchContext context = createSearchContext(
-                    text, true, matchCaseCB.isSelected(), regexCB.isSelected());
+                    text, !backwardsCB.isSelected(), matchCaseCB.isSelected(), regexCB.isSelected());
             boolean found = SearchEngine.find(dataField, context).wasFound();
             toggleSearchField(searchField, found);
             if(!found) {
@@ -121,9 +128,10 @@ public final class JSyntaxSearchToolBar implements ActionListener {
         context.setMatchCase(matchCase);
         context.setRegularExpression(isRegex);
         context.setSearchForward(forward);
-        context.setMarkAll(false);
+        context.setMarkAll(true);
         context.setSearchSelectionOnly(false);
         context.setWholeWord(false);
+        context.setSearchWrap(true);
         return context;
     }
 }

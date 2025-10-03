@@ -30,6 +30,7 @@ import javax.swing.text.html.HTMLEditorKit;
 
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,9 +85,11 @@ public class RenderAsHTML extends SamplerResultTab implements ResultRenderer {
          * editor-kit. The Stream property can then be
          */
         // Must be done before setContentType
-        results.setEditorKitForContentType(TEXT_HTML, embedded ? defaultHtmlEditor : customisedEditor);
+        resultsOld.setEditorKitForContentType(TEXT_HTML, embedded ? defaultHtmlEditor : customisedEditor);
+        resultsOld.setContentType(TEXT_HTML);
 
-        results.setContentType(TEXT_HTML);
+        results.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+        results.setLanguage(SyntaxConstants.SYNTAX_STYLE_HTML);
 
         if (embedded) {
             // Allow JMeter to render frames (and relative images)

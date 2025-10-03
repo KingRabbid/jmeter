@@ -183,7 +183,8 @@ public class Load extends AbstractActionWithNoRunningTest {
         if(isTestPlan && !merging) {
             // Why does this not call guiInstance.clearTestPlan() ?
             // Is there a reason for not clearing everything?
-            guiInstance.clearTestPlan((TestElement)tree.getArray()[0]);
+            //guiInstance.clearTestPlan((TestElement)tree.getArray()[0]);
+            guiInstance.clearTestPlan();
         }
 
         if (merging){ // Check if target of merge is reasonable

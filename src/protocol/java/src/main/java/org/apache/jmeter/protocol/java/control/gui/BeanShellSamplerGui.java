@@ -35,6 +35,7 @@ import org.apache.jmeter.protocol.java.sampler.BeanShellSamplerSchema;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 
 @TestElementMetadata(labelResource = "bsh_sampler_title")
 public class BeanShellSamplerGui extends AbstractSamplerGui {
@@ -117,9 +118,12 @@ public class BeanShellSamplerGui extends AbstractSamplerGui {
 
     private JPanel createParameterPanel() {
         JLabel label = new JLabel(JMeterUtils.getResString("bsh_script_parameters")); // $NON-NLS-1$
+        JFactory.small(label);
 
         parameters = new JTextField(10);
         parameters.setName(BeanShellSamplerSchema.INSTANCE.getParameters().getName());
+        JFactory.small(parameters);
+
         label.setLabelFor(parameters);
 
         JPanel parameterPanel = new JPanel(new BorderLayout(5, 0));
@@ -156,6 +160,7 @@ public class BeanShellSamplerGui extends AbstractSamplerGui {
 
         JLabel label = new JLabel(JMeterUtils.getResString("bsh_script")); // $NON-NLS-1$
         label.setLabelFor(scriptField);
+        JFactory.small(label);
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(label, BorderLayout.NORTH);

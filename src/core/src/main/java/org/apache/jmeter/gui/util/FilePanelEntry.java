@@ -35,7 +35,7 @@ import org.apache.jorphan.gui.JFactory;
 public class FilePanelEntry extends HorizontalPanel implements ActionListener {
     private static final long serialVersionUID = 280L;
 
-    private final JTextField filename = new JTextField(10);
+    private final JTextField filename = new JTextField(0);
 
     private final JLabel label;
 
@@ -94,6 +94,7 @@ public class FilePanelEntry extends HorizontalPanel implements ActionListener {
     private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
         add(label);
         add(filename);
+        JFactory.small(filename);
         filename.addActionListener(this);
         JFactory.small(browse);
         add(browse);

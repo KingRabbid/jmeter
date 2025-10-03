@@ -60,7 +60,7 @@ public class RequestViewRaw implements RequestView {
         sampleDataField.setWrapStyleWord(true);
         JPanel requestAndSearchPanel = new JPanel(new BorderLayout());
         requestAndSearchPanel.add(new JSyntaxSearchToolBar(sampleDataField).getToolBar(), BorderLayout.NORTH);
-        requestAndSearchPanel.add(JTextScrollPane.getInstance(sampleDataField), BorderLayout.CENTER);
+        requestAndSearchPanel.add(JTextScrollPane.getInstance(sampleDataField, true), BorderLayout.CENTER);
 
         headerData = JSyntaxTextArea.getInstance(20, 80, true);
         headerData.setEditable(false);
@@ -68,7 +68,7 @@ public class RequestViewRaw implements RequestView {
         headerData.setWrapStyleWord(true);
         JPanel headerAndSearchPanel = new JPanel(new BorderLayout());
         headerAndSearchPanel.add(new JSyntaxSearchToolBar(headerData).getToolBar(), BorderLayout.NORTH);
-        headerAndSearchPanel.add(JTextScrollPane.getInstance(headerData), BorderLayout.CENTER);
+        headerAndSearchPanel.add(JTextScrollPane.getInstance(headerData, true), BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.addTab(JMeterUtils.getResString("view_results_request_body"), new JScrollPane(requestAndSearchPanel));

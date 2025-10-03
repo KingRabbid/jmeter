@@ -175,7 +175,11 @@ public class Save extends AbstractAction {
         ActionRouter.getInstance().doActionNow(new ActionEvent(e.getSource(), e.getID(), ActionNames.CHECK_DIRTY));
         backupAndSave(e, subTree, fullSave, updateFile);
 
-        GuiPackage.getInstance().updateCurrentGui();
+        // After successful save, trigger JSR223 compilation
+        new CompileJSR223TestElements().doAction(
+                new ActionEvent(e.getSource(), e.getID(), ActionNames.COMPILE_JSR223)
+        );
+        //GuiPackage.getInstance().updateCurrentGui();
     }
 
     /**

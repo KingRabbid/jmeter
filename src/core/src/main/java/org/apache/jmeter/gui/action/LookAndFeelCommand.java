@@ -18,13 +18,19 @@
 package org.apache.jmeter.gui.action;
 
 import java.awt.event.ActionEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.prefs.Preferences;
 
-import javax.swing.*;
-
-import com.formdev.flatlaf.FlatLaf;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.util.JMeterMenuBar;
@@ -33,7 +39,8 @@ import org.apache.jorphan.gui.JFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.formdev.flatlaf.intellijthemes.*;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.intellijthemes.FlatAllIJThemes;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.Theme;
 import com.google.auto.service.AutoService;

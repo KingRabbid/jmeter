@@ -224,7 +224,7 @@ public class TCPConfigGui extends AbstractConfigGui {
         reqDataPanel.setBorder(BorderFactory.createTitledBorder(""));
 
         reqDataPanel.add(reqLabel, BorderLayout.WEST);
-        reqDataPanel.add(JTextScrollPane.getInstance(requestData), BorderLayout.CENTER);
+        reqDataPanel.add(JTextScrollPane.getInstance(requestData, true), BorderLayout.CENTER);
         return reqDataPanel;
     }
 

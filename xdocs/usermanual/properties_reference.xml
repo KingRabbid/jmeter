@@ -1507,10 +1507,14 @@ JMETER-SERVER</source>
     Set to zero to disable undo feature in JSyntaxTextArea.<br/>
     Defaults to: <code>50</code>
 </property>
-  <property name="jsyntaxtextarea.highlight">
-    Set to false to disable word highlight in JSyntaxTextArea.<br/>
-    Defaults to: <code>true</code>
-  </property>
+<property name="jsyntaxtextarea.highlight">
+  Set to false to disable word highlight in JSyntaxTextArea.<br/>
+  Defaults to: <code>true</code>
+</property>
+<property name="jsyntaxtextarea.tabsize">
+  Set to how many spaces on TAB character have.<br/>
+  Defaults to: <code>4</code>
+</property>
 <property name="jsyntaxtextarea.font.family">
     Change the font on the (JSyntax) Text Areas. (Useful for HiDPI screens).<br/>
     Defaults to empty value, which means platform default monospaced font
@@ -1573,7 +1577,7 @@ JMETER-SERVER</source>
   </property>
   <property name="view.results.tree.width">
     Default width of the scroll view.<br/>
-    Defaults to: <code>250</code>
+    Defaults to: <code>400</code>
   </property>
 <property name="document.max_size">
     Maximum size (in bytes) of Document that can be parsed by Tika engine<br/>
@@ -2004,6 +2008,10 @@ JMETER-SERVER</source>
     Used by JSR-223 elements.<br/>
     Size of compiled scripts cache.<br/>
     Defaults to: <code>100</code></property>
+    <property name="jsr223.compiled_scripts_cache_spec">
+      Used by JSR-223 elements.<br/>
+      Caffeine framework spec configuration in String format.<br/>
+      Defaults to: <code>maximumSize=100</code></property>
 </properties>
 </section>
 

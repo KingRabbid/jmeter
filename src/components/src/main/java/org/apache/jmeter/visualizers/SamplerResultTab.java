@@ -75,6 +75,9 @@ import org.apache.jorphan.gui.ObjectTableModel;
 import org.apache.jorphan.gui.RendererUtils;
 import org.apache.jorphan.gui.ui.KerningOptimizer;
 import org.apache.jorphan.reflect.Functor;
+import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +124,8 @@ public abstract class SamplerResultTab implements ResultRenderer {
 
     private JSyntaxTextArea headerData;
     /** Response Data shown here */
-    protected JEditorPane results;
+    protected JSyntaxTextArea results;
+    protected JEditorPane resultsOld;
 
     private JLabel imageLabel;
 
@@ -436,9 +440,11 @@ public abstract class SamplerResultTab implements ResultRenderer {
                 resFieldsModel.addRow(new RowResult("DataEncoding", sampleResult.getDataEncodingNoDefault())); //$NON-NLS-1$
 
                 // Reset search
+                /*
                 if (activateSearchExtension) {
                     searchTextExtension.resetTextToFind();
                 }
+                 */
 
             } else if (userObject instanceof AssertionResult) {
                 assertionResult = (AssertionResult) userObject;
@@ -587,8 +593,18 @@ public abstract class SamplerResultTab implements ResultRenderer {
     }
 
     private JPanel createResponseDataPanel() {
-        results = new JEditorPane();
+        results = JSyntaxTextArea.getInstance(50, 80, true);
+        results.setCodeFoldingEnabled(true);
+        results.setBracketMatchingEnabled(false);
+        results.setSyntaxEditingStyle(getSyntaxStyle());
+        results.setLanguage(getSyntaxStyle());
+        results.setLineWrap(true);
+        results.setWrapStyleWord(true);
         results.setEditable(false);
+
+        //this is to make things work, fix it
+        resultsOld = new JEditorPane();
+        resultsOld.setEditable(false);
 
         headerData = JSyntaxTextArea.getInstance(20, 80, true);
         headerData.setEditable(false);
@@ -597,19 +613,19 @@ public abstract class SamplerResultTab implements ResultRenderer {
 
         JPanel headersAndSearchPanel = new JPanel(new BorderLayout());
         headersAndSearchPanel.add(new JSyntaxSearchToolBar(headerData).getToolBar(), BorderLayout.NORTH);
-        headersAndSearchPanel.add(JTextScrollPane.getInstance(headerData), BorderLayout.CENTER);
+        headersAndSearchPanel.add(JTextScrollPane.getInstance(headerData, true), BorderLayout.CENTER);
 
-        resultsScrollPane = GuiUtils.makeScrollPane(results);
+        resultsScrollPane = JTextScrollPane.getInstance(results, true);
         imageLabel = new JLabel();
 
         JPanel resultAndSearchPanel = new JPanel(new BorderLayout());
         resultAndSearchPanel.add(resultsScrollPane, BorderLayout.CENTER);
-
-
         if (activateSearchExtension) {
             // Add search text extension
-            searchTextExtension = new SearchTextExtension(new JEditorPaneSearchProvider(results));
-            resultAndSearchPanel.add(searchTextExtension.getSearchToolBar(), BorderLayout.NORTH);
+            //searchTextExtension = new SearchTextExtension(new JEditorPaneSearchProvider(results));
+            //resultAndSearchPanel.add(searchTextExtension.getSearchToolBar(), BorderLayout.NORTH);
+            resultAndSearchPanel.add(new JSyntaxSearchToolBar(results).getToolBar(), BorderLayout.NORTH);
+            resultAndSearchPanel.add(resultsScrollPane, BorderLayout.CENTER);
         }
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -658,6 +674,10 @@ public abstract class SamplerResultTab implements ResultRenderer {
         TableColumn column = table.getColumnModel().getColumn(0);
         column.setMaxWidth(300);
         column.setPreferredWidth(180);
+    }
+
+    protected String getSyntaxStyle() {
+        return SyntaxConstants.SYNTAX_STYLE_NONE;
     }
 
     /**
@@ -711,7 +731,7 @@ public abstract class SamplerResultTab implements ResultRenderer {
      */
     protected void setTextOptimized(String data) {
         Document document = results.getDocument();
-        Document blank = new DefaultStyledDocument();
+        Document blank = new RSyntaxDocument(getSyntaxStyle());
         results.setDocument(blank);
         try {
             data = ViewResultsFullVisualizer.wrapLongLines(data);
@@ -720,11 +740,13 @@ public abstract class SamplerResultTab implements ResultRenderer {
             LOGGER.error("Error inserting text", ex);
         }
         if (SIMPLE_VIEW_LIMIT >= 0 && document.getLength() > SIMPLE_VIEW_LIMIT) {
-            results.setEditorKit(new NonWrappingPlainTextEditorKit(results.getEditorKit()));
+            resultsOld.setEditorKit(new NonWrappingPlainTextEditorKit(resultsOld.getEditorKit()));
         }
+
         KerningOptimizer.INSTANCE.configureKerning(results, document.getLength());
         results.setDocument(document);
     }
+
     static class NonWrappingPlainTextEditorKit extends EditorKit {
 
         private final EditorKit delegate;

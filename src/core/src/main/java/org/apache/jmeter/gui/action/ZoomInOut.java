@@ -35,6 +35,7 @@ public class ZoomInOut extends AbstractAction {
     private static final Set<String> commands = new HashSet<>();
 
     private static final float ZOOM_SCALE = JMeterUtils.getPropDefault("zoom_scale", 1.1f);
+    private static final float FONT_SCALE = JMeterUtils.getPropDefault("font_scale", 1.1f);
 
     static {
         commands.add(ActionNames.ZOOM_IN);
@@ -48,12 +49,16 @@ public class ZoomInOut extends AbstractAction {
     public void doAction(ActionEvent e) {
         final String actionCommand = e.getActionCommand();
         float scale = JMeterUIDefaults.INSTANCE.getScale();
+        float fontScale = JMeterUIDefaults.INSTANCE.getFontScale();
         if (actionCommand.equals(ActionNames.ZOOM_IN)) {
             scale *= ZOOM_SCALE;
+            fontScale *= FONT_SCALE;
         } else if (actionCommand.equals(ActionNames.ZOOM_OUT)) {
             scale /= ZOOM_SCALE;
+            fontScale /= FONT_SCALE;
         }
         JMeterUIDefaults.INSTANCE.setScale(scale);
+        JMeterUIDefaults.INSTANCE.setFontScale(fontScale);
         JMeterUtils.refreshUI();
     }
 

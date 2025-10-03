@@ -43,6 +43,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.jmeter.gui.ClearGui;
 import org.apache.jmeter.testbeans.TestBeanHelper;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -627,6 +628,7 @@ public class GenericTestBeanCustomizer extends JPanel implements SharedCustomize
         JLabel label = new JLabel(text);
         label.setHorizontalAlignment(SwingConstants.TRAILING);
         label.setToolTipText(propertyToolTipMessage.format(new Object[] { desc.getShortDescription() }));
+        JFactory.small(label);
 
         return label;
     }

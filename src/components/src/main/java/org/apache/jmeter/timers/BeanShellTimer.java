@@ -59,7 +59,7 @@ public class BeanShellTimer extends BeanShellTestElement implements Cloneable, T
             }
         } catch (JMeterException e) {
             if (log.isWarnEnabled()) {
-                log.warn("Problem in BeanShell script. {}", e.toString());
+                log.warn("Problem in BeanShell script: '{}'", getName(), e);
             }
         }
         try {

@@ -26,6 +26,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Argument;
@@ -208,8 +209,17 @@ public class SystemSamplerGui extends AbstractSamplerGui implements ItemListener
         panel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("command_config_box_title"))); // $NON-NLS-1$
         panel.add(cmdPanel, BorderLayout.NORTH);
-        panel.add(makeArgumentsPanel(), BorderLayout.CENTER);
-        panel.add(makeEnvironmentPanel(), BorderLayout.SOUTH);
+
+        // Create panels with preferred sizes to control their relative heights
+        JPanel argsPanel = makeArgumentsPanel();
+        JPanel envPanel = makeEnvironmentPanel();
+        argsPanel.setPreferredSize(new java.awt.Dimension(0, 200)); // Arguments panel taller
+        envPanel.setPreferredSize(new java.awt.Dimension(0, 150));  // Environment panel shorter
+
+        JSplitPane argsAndEnv = new JSplitPane(JSplitPane.VERTICAL_SPLIT, argsPanel, envPanel);
+        argsAndEnv.setResizeWeight(0.6); // Give 60% of space to arguments panel
+        argsAndEnv.setDividerLocation(0.6);
+        panel.add(argsAndEnv, BorderLayout.CENTER);
         return panel;
     }
 

@@ -242,7 +242,7 @@ public class JMSPublisherGui extends AbstractSamplerGui implements ChangeListene
 
         mainPanel.add(configChoice, "span");
         mainPanel.add(JMeterUtils.labelFor(textMessage, "jms_text_area"), "span");
-        mainPanel.add(JTextScrollPane.getInstance(textMessage), "span, growx");
+        mainPanel.add(JTextScrollPane.getInstance(textMessage, true), "span, growx");
         mainPanel.add(messageFile, "span, growx");
         mainPanel.add(randomFile, "span, growx");
 

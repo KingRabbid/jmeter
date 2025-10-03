@@ -122,6 +122,8 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
             }
         };
         rootPane.getActionMap().put(escapeAction.getValue(Action.NAME), escapeAction);
+        rootPane.setAutoscrolls(true);
+        rootPane.setSize(600, 600);
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStrokes.ESC, escapeAction.getValue(Action.NAME));
         return rootPane;
@@ -157,7 +159,7 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
         resultTextArea.setEditable(false);
         resultTextArea.setToolTipText(JMeterUtils.getResString("function_helper_dialog_result_warn"));
 
-        variablesTextArea = JSyntaxTextArea.getInstance(10,60);
+        variablesTextArea = JSyntaxTextArea.getInstance(5,60);
         variablesTextArea.setEditable(false);
 
         resultsPanel.add(generatePanel, "span 2");

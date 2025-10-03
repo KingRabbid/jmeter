@@ -22,6 +22,8 @@ import org.apache.jmeter.util.JMeterUtils;
 
 import com.google.auto.service.AutoService;
 
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+
 @AutoService(ResultRenderer.class)
 public class RenderAsText extends SamplerResultTab implements ResultRenderer {
 
@@ -33,7 +35,8 @@ public class RenderAsText extends SamplerResultTab implements ResultRenderer {
     }
 
     private void showTextResponse(String response) {
-        results.setContentType("text/plain"); // $NON-NLS-1$
+        results.setSyntaxEditingStyle(getSyntaxStyle());
+        results.setLanguage(getSyntaxStyle());
         setTextOptimized(response == null ? "" : response); // $NON-NLS-1$
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
@@ -48,4 +51,8 @@ public class RenderAsText extends SamplerResultTab implements ResultRenderer {
         return JMeterUtils.getResString("view_results_render_text"); // $NON-NLS-1$
     }
 
+    @Override
+    protected String getSyntaxStyle() {
+        return SyntaxConstants.SYNTAX_STYLE_NONE;
+    }
 }
