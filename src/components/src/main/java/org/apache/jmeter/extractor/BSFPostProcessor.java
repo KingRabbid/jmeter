@@ -39,7 +39,7 @@ public class BSFPostProcessor extends BSFTestElement implements Cloneable, PostP
             processFileOrScript(mgr);
         } catch (BSFException e) {
             if (log.isWarnEnabled()) {
-                log.warn("Problem in BSF script: script: '{}'", getName(), e);
+                log.warn("Problem in BSF element named: '{}'", getName(), e);
             }
         } finally {
             if (mgr != null) {

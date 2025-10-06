@@ -42,7 +42,7 @@ public class BSFPreProcessor extends BSFTestElement implements Cloneable, PrePro
             processFileOrScript(mgr);
         } catch (BSFException e) {
             if (log.isWarnEnabled()) {
-                log.warn("Problem in BSF script: '{}'", getName(), e);
+                log.warn("Problem in BSF element named: '{}'", getName(), e);
             }
         } finally {
             if (mgr != null) {

@@ -44,7 +44,7 @@ public class BSFTimer extends BSFTestElement implements Cloneable, Timer, TestBe
             delay = Long.parseLong(o.toString());
         } catch (NumberFormatException | BSFException e) {
             if (log.isWarnEnabled()) {
-                log.warn("Problem in BSF script: '{}'", getName(), e);
+                log.warn("Problem in BSF element named: '{}'", getName(), e);
             }
         } finally {
             if(mgr != null) {
