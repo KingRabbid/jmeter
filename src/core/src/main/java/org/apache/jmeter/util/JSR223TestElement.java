@@ -32,6 +32,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.SampleResult;
@@ -59,14 +61,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
     /**
      * Cache of compiled scripts
      */
-    private static final Cache<ScriptCacheKey, CompiledScript> COMPILED_SCRIPT_CACHE =
-            /*Caffeine
-                    .newBuilder()
-                    .maximumSize(JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100))
-                    .build();
-             */
-            Caffeine.from(JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_spec","maximumSize=" +
-                    JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100))).build();
+    private static Cache<ScriptCacheKey, CompiledScript> COMPILED_SCRIPT_CACHE;
 
     /**
      * Lambdas can't throw checked exceptions, so we wrap cache loading failure with a runtime one.
@@ -213,6 +208,9 @@ public abstract class JSR223TestElement extends ScriptingTestElement
                     try (BufferedReader fileReader = Files.newBufferedReader(scriptFile.toPath())) {
                         return ((Compilable) scriptEngine).compile(fileReader);
                     } catch (IOException | ScriptException e) {
+                        COMPILED_SCRIPT_CACHE.get(scriptMd5, k -> {
+                            return null;
+                        });
                         throw new ScriptCompilationInvocationTargetException(e);
                     }
                 });
@@ -220,17 +218,28 @@ public abstract class JSR223TestElement extends ScriptingTestElement
             }
             String script = getScript();
             if (!StringUtils.isEmpty(script)) {
-                if (supportsCompilable &&
-                        !ScriptingBeanInfoSupport.FALSE_AS_STRING.equals(cacheKey)) {
+                if (supportsCompilable) {
                     computeScriptMD5(script);
-                    CompiledScript compiledScript = getCompiledScript(scriptMd5, key -> {
-                        try {
-                            return ((Compilable) scriptEngine).compile(script);
-                        } catch (ScriptException e) {
-                            throw new ScriptCompilationInvocationTargetException(e);
-                        }
-                    });
-                    return compiledScript.eval(bindings);
+                    if (!ScriptingBeanInfoSupport.FALSE_AS_STRING.equals(cacheKey)) {
+                        CompiledScript compiledScript = getCompiledScript(scriptMd5, key -> {
+                            try {
+                                return ((Compilable) scriptEngine).compile(script);
+                            } catch (ScriptException e) {
+                                //simulate a cache miss to have better view of cache usage
+                                COMPILED_SCRIPT_CACHE.get(scriptMd5, k -> {
+                                    return null;
+                                });
+                                throw new ScriptCompilationInvocationTargetException(e);
+                            }
+                        });
+                        return compiledScript.eval(bindings);
+                    } else {
+                        //simulate a cache miss when 'cacheKey' is unchecked to have better view of cache usage
+                        COMPILED_SCRIPT_CACHE.get(scriptMd5, k -> {
+                            return null;
+                        });
+                        return scriptEngine.eval(script, bindings);
+                    }
                 } else {
                     return scriptEngine.eval(script, bindings);
                 }
@@ -345,6 +354,13 @@ public abstract class JSR223TestElement extends ScriptingTestElement
     @Override
     public void testStarted(String host) {
         // NOOP
+        synchronized (logger) {
+            if (COMPILED_SCRIPT_CACHE == null) {
+                COMPILED_SCRIPT_CACHE =
+                        Caffeine.from(JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_spec", "maximumSize=" +
+                                JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100) + ",recordStats")).build();
+            }
+        }
     }
 
     /**
@@ -360,9 +376,21 @@ public abstract class JSR223TestElement extends ScriptingTestElement
      */
     @Override
     public void testEnded(String host) {
-        if (COMPILED_SCRIPT_CACHE.estimatedSize() > 0)
-            logger.info("Compiled cache size: {}, stats: {}", COMPILED_SCRIPT_CACHE.estimatedSize(), COMPILED_SCRIPT_CACHE.stats());
+        if (COMPILED_SCRIPT_CACHE.estimatedSize() > 0) {
+            CacheStats stats = COMPILED_SCRIPT_CACHE.stats();
+            logger.info("Cached scripts: {}, requests: {} (hit: {} + missed: {}),  (hitRate: {}, missRate: {}), " +
+                            "save requests: {} (saved: {} + not saved: {}), " +
+                            "total save time: {} ms, average save duration: {} ms, evictions: {}",
+                    COMPILED_SCRIPT_CACHE.estimatedSize(), stats.requestCount(),
+                    stats.hitCount(), stats.missCount(),
+                    String.format("%.02f", stats.hitRate()), String.format("%.02f", stats.missRate()),
+                    stats.loadCount(), stats.loadSuccessCount(), stats.loadFailureCount(),
+                    String.format("%.02f", (stats.totalLoadTime() / 100000f)), String.format("%.02f", (stats.averageLoadPenalty() / 100000f)),
+                    stats.evictionCount());
+        }
         COMPILED_SCRIPT_CACHE.invalidateAll();
+        COMPILED_SCRIPT_CACHE.cleanUp();
+        COMPILED_SCRIPT_CACHE = null;
         scriptMd5 = null;
     }
 

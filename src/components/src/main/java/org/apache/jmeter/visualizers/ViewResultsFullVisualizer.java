@@ -132,7 +132,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
     private static final boolean SCROLL_STOP_CHECKBOX = JMeterUtils.getPropDefault("view.results.tree.scrollstop", true);
 
     // default tree scroll width
-    private static final int SCROLL_WIDTH = JMeterUtils.getPropDefault("view.results.tree.width", 400); // $NON-NLS-1$
+    private static final int SCROLL_WIDTH = JMeterUtils.getPropDefault("view.results.tree.width", 300); // $NON-NLS-1$
 
     private static final int REFRESH_PERIOD = JMeterUtils.getPropDefault("jmeter.gui.refresh_period", 500);
 
