@@ -75,8 +75,8 @@ public class JMeterUIDefaults {
     public static final String TABLE_ROW_HEIGHT = "Table.rowHeight"; // $NON-NLS-1$
     public static final String TREE_ROW_HEIGHT = "Tree.rowHeight"; // $NON-NLS-1$
 
-    //private static final float SMALL_FONT_SCALE = 10f / 12;
-    //private static final float BIG_FONT_SCALE = 4f / 3;
+    private static final float SMALL_FONT_SCALE = 10f / 12;
+    private static final float BIG_FONT_SCALE = 4f / 3;
     private static final float WARNING_FONT_SCALE = 11f / 10;
     private static final float ERROR_FONT_SCALE = 11f / 10;
 
@@ -132,13 +132,13 @@ public class JMeterUIDefaults {
             defaults.put("Button.defaultButtonFollowsFocus", false); // $NON-NLS-1$
             defaults.put(TEXTAREA_BORDER, (UIDefaults.LazyValue) d -> new JTextField().getBorder());
 
-            addScaledFont(defaults, BUTTON_SMALL_FONT, "Button.font"); // $NON-NLS-1$
-            addScaledFont(defaults, CHECKBOX_SMALL_FONT, "CheckBox.font"); // $NON-NLS-1$
-            addScaledFont(defaults, LABEL_SMALL_FONT, "Label.font"); // $NON-NLS-1$
-            addScaledFont(defaults, TEXTFIELD_SMALL_FONT, "TextField.font"); // $NON-NLS-1$
-            addScaledFont(defaults, TOOLBAR_SMALL_FONT, "ToolBar.font"); // $NON-NLS-1$
+            addScaledFont(defaults, BUTTON_SMALL_FONT, "Button.font", SMALL_FONT_SCALE); // $NON-NLS-1$
+            addScaledFont(defaults, CHECKBOX_SMALL_FONT, "CheckBox.font", SMALL_FONT_SCALE); // $NON-NLS-1$
+            addScaledFont(defaults, LABEL_SMALL_FONT, "Label.font", SMALL_FONT_SCALE); // $NON-NLS-1$
+            addScaledFont(defaults, TEXTFIELD_SMALL_FONT, "TextField.font", SMALL_FONT_SCALE); // $NON-NLS-1$
+            addScaledFont(defaults, TOOLBAR_SMALL_FONT, "ToolBar.font", SMALL_FONT_SCALE); // $NON-NLS-1$
 
-            addScaledFont(defaults, LABEL_BIG_FONT, "Label.font"); // $NON-NLS-1$
+            addScaledFont(defaults, LABEL_BIG_FONT, "Label.font", BIG_FONT_SCALE); // $NON-NLS-1$
 
             addDerivedFont(defaults, LABEL_WARNING_FONT, "Label.font", // $NON-NLS-1$
                     f -> f.deriveFont(f.getStyle() | Font.BOLD, f.getSize2D() * WARNING_FONT_SCALE));
@@ -159,8 +159,8 @@ public class JMeterUIDefaults {
         return stripUiResource(StyleContext.getDefaultStyleContext().getFont(family, style, size));
     }
 
-    private static void addScaledFont(UIDefaults defaults, String output, String input) {
-        addDerivedFont(defaults, output, input, f -> f.deriveFont(f.getSize2D()));
+    private static void addScaledFont(UIDefaults defaults, String output, String input, float scale) {
+        addDerivedFont(defaults, output, input, f -> f.deriveFont(f.getSize2D() * scale));
     }
 
     private static void addDerivedFont(UIDefaults defaults, String output, String input, Function<? super Font, ? extends Font> f) {

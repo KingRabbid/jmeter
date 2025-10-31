@@ -18,7 +18,10 @@
 package org.apache.jmeter.gui.util;
 
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 import org.fife.ui.rtextarea.RTextScrollPane;
+
+import javax.swing.*;
 
 import java.awt.*;
 
@@ -122,12 +125,12 @@ public class JTextScrollPane extends RTextScrollPane {
             codeFoldingCheck.addActionListener(e -> scrollPane.setFoldIndicatorEnabled(codeFoldingCheck.isSelected()));
 
             // Add components to the toolbar
-            toolBar.add(lineWrapCheck);
-            toolBar.add(wrapStyleCheck);
-            toolBar.add(eolCheck);
-            toolBar.add(whitespaceCheck);
-            toolBar.add(lineNumbersCheck);
-            toolBar.add(codeFoldingCheck);
+            toolBar.add(JFactory.small(lineWrapCheck));
+            toolBar.add(JFactory.small(wrapStyleCheck));
+            toolBar.add(JFactory.small(eolCheck));
+            toolBar.add(JFactory.small(whitespaceCheck));
+            toolBar.add(JFactory.small(lineNumbersCheck));
+            toolBar.add(JFactory.small(codeFoldingCheck));
 
             scrollPane.setColumnHeaderView(toolBar);
 
