@@ -1367,6 +1367,7 @@ public class JMeterUtils implements UnitTestManager {
      */
     @API(since = "5.3", status = API.Status.DEPRECATED)
     public static void applyHiDPIOnFonts() {
+        log.info("Apply HiDPI on fonts: mode={}, scale={}", getHiDPIMode(), getHiDPIScaleFactor());
         if (!getHiDPIMode()) {
             return;
         }
@@ -1380,7 +1381,7 @@ public class JMeterUtils implements UnitTestManager {
     @API(since = "5.3", status = API.Status.DEPRECATED)
     public static void applyScaleOnFonts(final float scale) {
         JMeterUIDefaults defaults = JMeterUIDefaults.INSTANCE;
-        defaults.setFontScale(defaults.getFontScale() * scale);
+        defaults.setScale(defaults.getScale() * scale);
     }
 
     /**

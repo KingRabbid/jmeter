@@ -84,25 +84,15 @@ public class JMeterUIDefaults {
     public static final JMeterUIDefaults INSTANCE = new JMeterUIDefaults();
 
     private float scale = 1.0f;
-    private float fontScale = 1.0f;
 
     @API(since = "5.3", status = API.Status.EXPERIMENTAL)
     public float getScale() {
         return scale;
     }
 
-    public float getFontScale() {
-        return fontScale;
-    }
-
     @API(since = "5.3", status = API.Status.EXPERIMENTAL)
     public void setScale(float scale) {
         this.scale = scale;
-    }
-
-    @API(since = "5.3", status = API.Status.EXPERIMENTAL)
-    public void setFontScale(float scale) {
-        this.fontScale = scale;
     }
 
     private JMeterUIDefaults() {
@@ -116,18 +106,14 @@ public class JMeterUIDefaults {
             // so the properties are removed when LaF is changed
             UIDefaults defaults = UIManager.getLookAndFeelDefaults();
 
-            if (Math.abs(fontScale - 1.0f) > 0.01f) {
-                scaleFonts(defaults);
-            }
-
             if (Math.abs(scale - 1.0f) > 0.01f) {
-                log.info("Applying scale factor: {}", scale); // $NON-NLS-1$
+                scaleFonts(defaults);
                 scaleIntProperties(defaults, scale);
                 // We don't want to make controls extra big, so we damp the scaling factors
                 scaleControlsProperties(defaults, (float) Math.sqrt(scale));
             }
-            configureRowHeight(defaults, fontScale, TABLE_ROW_HEIGHT, "Table.font"); // $NON-NLS-1$
-            configureRowHeight(defaults, fontScale, TREE_ROW_HEIGHT, "Tree.font"); // $NON-NLS-1$
+            configureRowHeight(defaults, scale, TABLE_ROW_HEIGHT, "Table.font"); // $NON-NLS-1$
+            configureRowHeight(defaults, scale, TREE_ROW_HEIGHT, "Tree.font"); // $NON-NLS-1$
 
             defaults.put("Button.defaultButtonFollowsFocus", false); // $NON-NLS-1$
             defaults.put(TEXTAREA_BORDER, (UIDefaults.LazyValue) d -> new JTextField().getBorder());
@@ -225,17 +211,17 @@ public class JMeterUIDefaults {
     }
 
     private void scaleFonts(UIDefaults defaults) {
-        log.info("Applying font scale factor: {}", fontScale); // $NON-NLS-1$
+        log.info("Applying font scale factor: {}", scale); // $NON-NLS-1$
         if ("Nimbus".equals(UIManager.getLookAndFeel().getID())) { // $NON-NLS-1$
             // Nimbus derives all the fonts from defaultFont, so it is enough to update it
             Font defaultFont = defaults.getFont("defaultFont"); // $NON-NLS-1$
             if (defaultFont != null) {
-                Font newFont = defaultFont.deriveFont(defaultFont.getSize2D() * fontScale);
+                Font newFont = defaultFont.deriveFont(defaultFont.getSize2D() * scale);
                 defaults.put("defaultFont", sameUiResource(defaultFont, newFont)); // $NON-NLS-1$
                 return;
             }
         }
-        // For other LaFs just update all the font resources.
+        // For other LAFs just update all the font resources.
         // Note: there might be derived fonts (e.g. javax.swing.UIDefaults.ActiveValue)
         // that compute their value based on another UIDefaults
         // So we update fonts in two loops: first we remember the actual fonts, then we update them
@@ -251,7 +237,7 @@ public class JMeterUIDefaults {
 
         for (Map.Entry<Object, Font> entry : fonts.entrySet()) {
             Font oldFont = entry.getValue();
-            Font newFont = sameUiResource(oldFont, oldFont.deriveFont(oldFont.getSize2D() * fontScale));
+            Font newFont = sameUiResource(oldFont, oldFont.deriveFont(oldFont.getSize2D() * scale));
             defaults.put(entry.getKey(), newFont);
         }
     }
