@@ -196,11 +196,12 @@ public final class FileDialoger {
            jfc.setAcceptAllFileFilterUsed(true);
            jfc.setFileFilter(currentFilter);
        }
+       enableAutoSizeColumns(jfc);
        Action details = jfc.getActionMap().get("viewTypeDetails");
        details.actionPerformed(null);
        jfc.rescanCurrentDirectory();
        autoSizeColumnsLogic(jfc);
-       enableAutoSizeColumns(jfc);
+
        int retVal = jfc.showOpenDialog(parentComponent);
        lastJFCDirectory = jfc.getCurrentDirectory().getAbsolutePath();
 
@@ -285,11 +286,11 @@ public final class FileDialoger {
             jfc.addChoosableFileFilter(new JMeterFileFilter(new String[] { ext }));
         }
 
+        enableAutoSizeColumns(jfc);
         Action details = jfc.getActionMap().get("viewTypeDetails");
         details.actionPerformed(null);
         jfc.rescanCurrentDirectory();
         autoSizeColumnsLogic(jfc);
-        enableAutoSizeColumns(jfc);
 
         int retVal = jfc.showSaveDialog(GuiPackage.getInstance().getMainFrame());
         jfc.setDialogTitle(null);
@@ -354,13 +355,13 @@ public final class FileDialoger {
                 }
                 Component headerComp = headerRenderer.getTableCellRendererComponent(
                         table, column.getHeaderValue(), false, false, 0, col);
-                int maxWidth = headerComp.getPreferredSize().width;
+                int maxWidth = headerComp.getPreferredSize().width == 0 ? headerComp.getWidth() : headerComp.getPreferredSize().width;
 
                 // Check data width for each row
                 for (int row = 0; row < table.getRowCount(); row++) {
                     TableCellRenderer renderer = table.getCellRenderer(row, col);
                     Component comp = table.prepareRenderer(renderer, row, col);
-                    maxWidth = Math.max(comp.getPreferredSize().width, maxWidth);
+                    maxWidth = Math.max(comp.getPreferredSize().width == 0 ? comp.getWidth() : comp.getPreferredSize().width, maxWidth);
                 }
 
                 // Add some padding and set column width
@@ -371,9 +372,7 @@ public final class FileDialoger {
 
             // Second pass: Set first column width to fill remaining space
             if (columnModel.getColumnCount() > 0) {
-                int viewportWidth = table.getParent() instanceof JViewport
-                        ? ((JViewport) table.getParent()).getWidth()
-                        : table.getWidth();
+                int viewportWidth = table.getParent() instanceof JViewport ? ((JViewport) table.getParent()).getWidth() : table.getWidth();
 
                 // Account for possible vertical scrollbar width
                 int scrollbarWidth = 5; // Approximate scrollbar width
