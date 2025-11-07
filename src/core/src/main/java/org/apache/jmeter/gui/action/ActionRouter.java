@@ -71,14 +71,12 @@ public final class ActionRouter implements ActionListener {
             GuiPackage.getInstance().beginUndoTransaction();
         }
         try {
-            /*
             try {
                 GuiPackage.getInstance().updateCurrentGui();
             } catch (Exception err){
                 log.error("performAction({}) updateCurrentGui() on{} caused", actionCommand, e, err);
                 JMeterUtils.reportErrorToUser("Problem updating GUI - see log file for details");
             }
-             */
             for (Command c : commands.get(actionCommand)) {
                 try {
                     preActionPerformed(c.getClass(), e);
