@@ -109,7 +109,7 @@ public class JTextScrollPane extends RTextScrollPane {
             eolCheck.setSelected(scriptField.getEOLMarkersVisible());
             eolCheck.addActionListener(e -> scriptField.setEOLMarkersVisible(eolCheck.isSelected()));
 
-            // Whhitespace visible Checkbox
+            // Whitespace visible Checkbox
             javax.swing.JCheckBox whitespaceCheck = new javax.swing.JCheckBox(JMeterUtils.getResString("jsyntaxtextarea_line_whitespace"));
             whitespaceCheck.setSelected(scriptField.isWhitespaceVisible());
             whitespaceCheck.addActionListener(e -> scriptField.setWhitespaceVisible(whitespaceCheck.isSelected()));

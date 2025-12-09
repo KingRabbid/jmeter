@@ -611,22 +611,20 @@ public abstract class SamplerResultTab implements ResultRenderer {
         headerData.setLineWrap(true);
         headerData.setWrapStyleWord(true);
 
-        JPanel headersAndSearchPanel = new JPanel(new BorderLayout());
-        headersAndSearchPanel.add(new JSyntaxSearchToolBar(headerData).getToolBar(), BorderLayout.NORTH);
-        headersAndSearchPanel.add(JTextScrollPane.getInstance(headerData, true), BorderLayout.CENTER);
-
-        resultsScrollPane = JTextScrollPane.getInstance(results, true);
         imageLabel = new JLabel();
 
+        JPanel headersAndSearchPanel = new JPanel(new BorderLayout());
         JPanel resultAndSearchPanel = new JPanel(new BorderLayout());
-        resultAndSearchPanel.add(resultsScrollPane, BorderLayout.CENTER);
+        resultsScrollPane = JTextScrollPane.getInstance(results, true);
         if (activateSearchExtension) {
             // Add search text extension
             //searchTextExtension = new SearchTextExtension(new JEditorPaneSearchProvider(results));
             //resultAndSearchPanel.add(searchTextExtension.getSearchToolBar(), BorderLayout.NORTH);
             resultAndSearchPanel.add(new JSyntaxSearchToolBar(results).getToolBar(), BorderLayout.NORTH);
-            resultAndSearchPanel.add(resultsScrollPane, BorderLayout.CENTER);
+            headersAndSearchPanel.add(new JSyntaxSearchToolBar(headerData).getToolBar(), BorderLayout.NORTH);
         }
+        resultAndSearchPanel.add(resultsScrollPane, BorderLayout.CENTER);
+        headersAndSearchPanel.add(JTextScrollPane.getInstance(headerData, true), BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.addTab(JMeterUtils.getResString("view_results_response_body"), new JScrollPane(resultAndSearchPanel));
