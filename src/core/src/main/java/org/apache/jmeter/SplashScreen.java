@@ -55,7 +55,7 @@ public class SplashScreen extends JDialog {
         add(loadLogo(), BorderLayout.CENTER);
         add(progressBar, BorderLayout.SOUTH);
         setModalityType(ModalityType.APPLICATION_MODAL);
-        setAutoRequestFocus(true);
+        setAutoRequestFocus(false);
         setUndecorated(true);
         pack();
         setLocationRelativeTo(null);
