@@ -467,29 +467,12 @@ public abstract class JSR223TestElement extends ScriptingTestElement
                 COMPILED_SCRIPT_CACHE.cleanUp();
                 COMPILED_SCRIPT_CACHE = null;
 
-                long computeScriptCacheKeyCount = computeScriptCacheKeyCounts.values().stream().reduce(Long::sum).orElse(0L);
-                double computeScriptCacheKeyTimeTotal = computeScriptCacheKeyTimes.values().stream().reduce(Double::sum).orElse(0.0);
-                long getCompiledScriptCount = getCompiledScriptCounts.values().stream().reduce(Long::sum).orElse(0L);
-                double getCompiledScriptTimeTotal = getCompiledScriptTimes.values().stream().reduce(Double::sum).orElse(0.0);
-                double fullRunTimeTotal = fullRunTimes.values().stream().reduce(Double::sum).orElse(0.0);
-
-                logger.info("JSR223 computeScriptCacheKey calls: {}, total time: {} ms, avg: {} ms",
-                        computeScriptCacheKeyCount,
-                        String.format("%.2f", computeScriptCacheKeyTimeTotal),
-                        computeScriptCacheKeyCount == 0 ? 0 : String.format("%.2f", (computeScriptCacheKeyTimeTotal / computeScriptCacheKeyCount)));
-                logTopContributors(computeScriptCacheKeyCounts, computeScriptCacheKeyTimes, "computeScriptCacheKey");
-
-                logger.info("JSR223 getCompiledScript calls: {}, total time: {} ms, avg: {} ms",
-                        getCompiledScriptCount,
-                        String.format("%.2f", getCompiledScriptTimeTotal),
-                        getCompiledScriptCount == 0 ? 0 : String.format("%.2f", (getCompiledScriptTimeTotal / getCompiledScriptCount)));
-                logTopContributors(getCompiledScriptCounts, getCompiledScriptTimes, "getCompiledScript");
-
-                logger.info("JSR223 full processFileOrScript calls: {}, total time: {} ms, avg: {} ms",
-                        computeScriptCacheKeyCount,
-                        String.format("%.2f", fullRunTimeTotal),
-                        computeScriptCacheKeyCount == 0 ? 0 : String.format("%.2f", (fullRunTimeTotal / computeScriptCacheKeyCount)));
-                logTopContributors(computeScriptCacheKeyCounts, fullRunTimes, "processFileOrScript");
+                int topLimit = getTopContributorsLimit();
+                if (topLimit > 0) {
+                    logTopContributors(computeScriptCacheKeyCounts, computeScriptCacheKeyTimes, "computeScriptCacheKey");
+                    logTopContributors(getCompiledScriptCounts, getCompiledScriptTimes, "getCompiledScript");
+                    logTopContributors(computeScriptCacheKeyCounts, fullRunTimes, "processFileOrScript");
+                }
 
                 computeScriptCacheKeyCounts.clear();
                 computeScriptCacheKeyTimes.clear();
@@ -510,18 +493,89 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         scriptLanguage = s;
     }
 
-    private static void logTopContributors(Map<ScriptCacheKey, Long> counts, Map<ScriptCacheKey, Double> durations, String method) {
-        List<Map.Entry<String, Double>> averages = new ArrayList<>();
-        for (Map.Entry<ScriptCacheKey, Long> entry : counts.entrySet()) {
-            ScriptCacheKey key = entry.getKey();
-            long count = entry.getValue();
-            double totalDuration = durations.getOrDefault(key, 0.0);
-            double avgDuration = count == 0 ? 0 : totalDuration / count;
-            averages.add(new AbstractMap.SimpleEntry<>(String.format("'%s'[%dx=%.2f ms]", keys2Names.get(key), count, totalDuration), avgDuration));
+    /**
+     * Read configured maximum number of top contributors to report.
+     * Property: jsr223.statsReports (default "5").
+     */
+    private static int getTopContributorsLimit() {
+        String raw = JMeterUtils.getPropDefault("jsr223.statsReports", "5");
+        try {
+            int v = Integer.parseInt(raw.trim());
+            return v < 0 ? 0 : v;
+        } catch (Exception ex) {
+            return 5;
         }
-        List<Map.Entry<String, Double>> sorted = new ArrayList<>(averages);
-        sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue())); //sort descending
-        logger.info("{}: Heaviest max 10 duration averages (ms): {}", method, sorted.subList(0, sorted.size()));
     }
-}
 
+    private static void logTopContributors(Map<ScriptCacheKey, Long> counts, Map<ScriptCacheKey, Double> durations, String method) {
+        // Build entries with key, name, count, total and average durations
+        int configuredLimit = getTopContributorsLimit();
+        if (configuredLimit == 0) {
+            return;
+        }
+
+        class Entry {
+            final ScriptCacheKey key;
+            final String name;
+            final long count;
+            final double totalDuration;
+            final double avgDuration;
+
+            Entry(ScriptCacheKey key, String name, long count, double totalDuration) {
+                this.key = key;
+                this.name = name == null ? key.toString() : name;
+                this.count = count;
+                this.totalDuration = totalDuration;
+                this.avgDuration = count == 0 ? 0.0 : (totalDuration / count);
+            }
+        }
+
+        List<Entry> list = new ArrayList<>();
+        for (Map.Entry<ScriptCacheKey, Long> e : counts.entrySet()) {
+            ScriptCacheKey key = e.getKey();
+            long count = e.getValue() == null ? 0L : e.getValue();
+            double total = durations.getOrDefault(key, 0.0);
+            list.add(new Entry(key, keys2Names.get(key), count, total));
+        }
+
+        if (list.isEmpty()) {
+            logger.info("{}: No contributors recorded.", method);
+            return;
+        }
+        int limit = Math.min(configuredLimit, list.size());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Heaviest top %d contributors by their total '%s' execution times (ms)%n", limit, method));
+
+        for (int j = 0; j < 2; j++) {
+            if (j == 0) {
+                list.sort((a, b) -> Double.compare(b.totalDuration, a.totalDuration));
+                sb.append(String.format("%n===> By total duration (ms) <===%n"));
+            } else {
+                list.sort((a, b) -> Double.compare(b.avgDuration, a.avgDuration));
+                sb.append(String.format("%n===> By average duration (ms) <===%n"));
+            }
+            sb.append(String.format(Locale.ROOT, "%-5s %-60s %12s %15s %12s%n", "Rank", "Element name", "Calls", "Duration(ms)", "Avg(ms)"));
+
+            long sumCounts = 0L;
+            double sumTotal = 0.0;
+            for (int i = 0; i < limit; i++) {
+                Entry ent = list.get(i);
+                String totalStr = String.format(Locale.ROOT, "%.3f", ent.totalDuration);
+                String avgStr = String.format(Locale.ROOT, "%.3f", ent.avgDuration);
+                String name = ent.name == null ? ent.key.toString() : ent.name;
+                String displayName = name.length() > 60 ? name.substring(0, 57) + "..." : name;
+                sb.append(String.format(Locale.ROOT, "%-5d %-60s %12d %15s %12s%n", (i + 1), displayName, ent.count, totalStr, avgStr));
+                sumCounts += ent.count;
+                sumTotal += ent.totalDuration;
+            }
+
+            // SUM row for the printed items: show summed count and total duration and averaged avg
+            String sumTotalStr = String.format(Locale.ROOT, "%.3f", sumTotal);
+            String sumAvgStr = String.format(Locale.ROOT, "%.3f", (sumCounts == 0L ? 0.0 : (sumTotal / sumCounts)));
+            sb.append(String.format(Locale.ROOT, "%-5s %-60s %12d %15s %12s%n", "", "Total:", sumCounts, sumTotalStr, sumAvgStr));
+        }
+        logger.info(sb.toString());
+    }
+
+}
