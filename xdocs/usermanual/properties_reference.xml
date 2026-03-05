@@ -2012,6 +2012,10 @@ JMETER-SERVER</source>
       Used by JSR-223 elements.<br/>
       Caffeine framework spec configuration in String format.<br/>
       Defaults to: <code>maximumSize=100</code></property>
+    <property name="jsr223.statsReportsTop">
+      Used by JSR-223 elements.<br/>
+      Should usage reports be printed at the end of the run (value > 0) then how many items to display.<br/>
+      Defaults to: <code>statsReportsTop=5</code></property>
 </properties>
 </section>
 

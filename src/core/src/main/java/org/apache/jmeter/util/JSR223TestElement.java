@@ -495,10 +495,10 @@ public abstract class JSR223TestElement extends ScriptingTestElement
 
     /**
      * Read configured maximum number of top contributors to report.
-     * Property: jsr223.statsReports (default "5").
+     * Property: jsr223.statsReportsTop (default "5").
      */
     private static int getTopContributorsLimit() {
-        String raw = JMeterUtils.getPropDefault("jsr223.statsReports", "5");
+        String raw = JMeterUtils.getPropDefault("jsr223.statsReportsTop", "5");
         try {
             int v = Integer.parseInt(raw.trim());
             return v < 0 ? 0 : v;
