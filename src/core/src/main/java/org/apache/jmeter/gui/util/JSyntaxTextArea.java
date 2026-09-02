@@ -160,7 +160,7 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
         } else {
             baseFont = JMeterUIDefaults.createFont(jSyntaxTextArea.getFont().getFamily(), Font.PLAIN, USER_FONT_SIZE > 0 ? USER_FONT_SIZE : 12);
         }
-        if (Math.abs(scale - 1.0f) > 0.01) {
+        if (Math.abs(scale - 1.0f) > 0.1) {
             baseFont = baseFont.deriveFont(baseFont.getSize2D() * scale);
         }
 

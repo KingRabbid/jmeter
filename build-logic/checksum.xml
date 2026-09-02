@@ -14,6 +14,7 @@
     <trusted-key id='d112630c899f508198c09018105cb91cac2aee0e' group='com.github.vlsi.gradle' />
     <trusted-key id='7616eb882daf57a11477aaf559a252fb1199d873' group='com.google.code.findbugs' />
     <trusted-key id='afcc4c7594d09e2182c60e0f7a01b0f236e5430f' group='com.google.code.gson' />
+    <trusted-key id='c7be5bcc9fec15518cfda882b0f3710fa64900e7' group='com.google.code.gson' />
     <trusted-key id='7615ad56144df2376f49d98b1669c4bb543e0445' group='com.google.errorprone' />
     <trusted-key id='f05e5f90e43e837f9dd8c781bf935c771a8474f8' group='com.google.errorprone' />
     <trusted-key id='694621a7227d8d5289699830abe9f3126bb741c1' group='com.google.guava' />
@@ -50,6 +51,7 @@
     <trusted-key id='6214760097dc5cfad0175ac2c9fbaa83a8753994' group='org.codehaus.woodstox' />
     <trusted-key id='2e92113263fc31c74ccbaab20e91c2de43b72bb1' group='org.ec4j.core' />
     <trusted-key id='7c669810892cbd3148fa92995b05ccde140c2876' group='org.eclipse.jgit' />
+    <trusted-key id='1bd97a6a154e7810ee0bc832e2f38302c8075e3d' group='org.gradle.kotlin' />
     <trusted-key id='66d7cbff956830fe9f5a723afe6c7d77a1ce15a6' group='org.gradlex' />
     <trusted-key id='4db1a49729b053caf015cee9a6adfc93ef34893e' group='org.hamcrest' />
     <trusted-key id='2e3a1affe42b5f53af19f780bcf4173966770193' group='org.jetbrains' />

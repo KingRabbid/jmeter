@@ -484,15 +484,15 @@ public final class ClassFinder {
                         );
                         return;
                     }
-                    log.info(
-                            "Will scan jar {} with filter {}. Consider exposing JMeter plugins via META-INF/services, " +
-                                    "and add {}=true manifest attribute so JMeter can skip classfile scanning",
-                            file, filter, JMETER_SKIP_CLASS_SCANNING_ATTRIBUTE
-                    );
                 } catch (IOException e) {
                     log.warn("Can not open the jar {}, message: {}", file.getAbsolutePath(), e.getLocalizedMessage(), e);
                 }
             }
+            log.info(
+                    "Will scan jar {} with filter {}. Consider exposing JMeter plugins via META-INF/services, " +
+                            "and add {}=true manifest attribute so JMeter can skip classfile scanning",
+                    file, filter, JMETER_SKIP_CLASS_SCANNING_ATTRIBUTE
+            );
             try (ZipFile zipFile = new ZipFile(file);
                  Stream<? extends ZipEntry> entries = zipFile.stream()) {
                 entries.filter(entry -> entry.getName().endsWith(DOT_CLASS))

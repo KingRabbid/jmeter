@@ -89,7 +89,7 @@ public class LoggerPanel extends JPanel implements GuiLogEventListener {
             jTextArea = jSyntaxTextArea;
         } else {
             // Plain text area
-            jTextArea =  new JTextArea(15, 80);            
+            jTextArea =  new JTextArea(15, 80);
             areaScrollPane = new JScrollPane(jTextArea);
         }
         jTextArea.setEditable(false);
