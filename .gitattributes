@@ -15,7 +15,7 @@
 *.bat    text eol=crlf
 *.cmd    text eol=crlf
 
-# Blow files don't have extension, so we mention them explicitly
+# Below files don't have extension, so we mention them explicitly
 /gradlew           text eol=lf executable
 /bin/jmeter        text eol=lf executable
 /bin/jmeter-server text eol=lf executable
