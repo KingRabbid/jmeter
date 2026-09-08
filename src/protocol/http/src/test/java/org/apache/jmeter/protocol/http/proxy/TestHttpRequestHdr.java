@@ -318,7 +318,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         testGetRequestEncodings("http://[::1]:8080/matrix.html");
     }
 
-    private void testGetRequestEncodings(String url) throws Exception {
+    private static void testGetRequestEncodings(String url) throws Exception {
         // A HTTP GET request, with encoding not known
         String contentEncoding = "";
         String param1Value = "yes";
@@ -595,7 +595,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         assertEquals(mimeType, hfa.getMimeType());
     }
 
-    private String createMultipartFormBody(String titleValue, String descriptionValue,
+    private static String createMultipartFormBody(String titleValue, String descriptionValue,
             String contentEncoding, boolean includeExtraHeaders,
             String boundary, String endOfLine) {
 
@@ -628,7 +628,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
                     boundary, endOfLine);
     }
 
-    private String createMultipartFileUploadBody(String fileField, String fileName,
+    private static String createMultipartFileUploadBody(String fileField, String fileName,
             String fileMimeType, String fileContent, String boundary, String endOfLine) {
         // File upload multipart
         String postBody = "--" + boundary + endOfLine
@@ -641,7 +641,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         return postBody;
     }
 
-    private String createMultipartFormRequest(String url, String postBody, String contentEncoding, String boundary, String endOfLine)
+    private static String createMultipartFormRequest(String url, String postBody, String contentEncoding, String boundary, String endOfLine)
             throws IOException {
         String postRequest = "POST " + url + " HTTP/1.1" + endOfLine
             + "Content-type: "
@@ -653,7 +653,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         return postRequest;
     }
 
-    private HTTPSamplerBase getSamplerForRequest(String url, String request, String contentEncoding)
+    private static HTTPSamplerBase getSamplerForRequest(String url, String request, String contentEncoding)
             throws Exception {
         HttpRequestHdr req = new HttpRequestHdr();
         ByteArrayInputStream bis = null;
@@ -678,7 +678,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         return sampler;
     }
 
-    private void checkArgument(
+    private static void checkArgument(
             HTTPArgument arg,
             String expectedName,
             String expectedValue,
@@ -697,7 +697,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         assertPrimitiveEquals(expectedEncoded, arg.isAlwaysEncoded());
     }
 
-    private int getBodyLength(String postBody, String contentEncoding) throws IOException {
+    private static int getBodyLength(String postBody, String contentEncoding) throws IOException {
         if (StringUtilities.isNotEmpty(contentEncoding)) {
             return postBody.getBytes(contentEncoding).length;
         }

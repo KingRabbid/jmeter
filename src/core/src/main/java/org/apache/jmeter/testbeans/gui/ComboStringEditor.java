@@ -65,7 +65,7 @@ class ComboStringEditor extends PropertyEditorSupport implements ItemListener, C
 
     private final DefaultComboBoxModel<Object> model;
 
-    /*
+    /**
      * Map of translations for tags; only created if there is at least
      * one tag and a ResourceBundle has been provided.
      */
@@ -191,7 +191,15 @@ class ComboStringEditor extends PropertyEditorSupport implements ItemListener, C
      */
     @Override
     public void setValue(Object value) {
-        setAsText((String) value);
+        if (value == null) {
+            setAsText(null);
+            return;
+        }
+        if (value instanceof String literal) {
+            setAsText(literal);
+            return;
+        }
+        throw new IllegalArgumentException("Expected String but got " + value.getClass() + ", value=" + value);
     }
 
     /**
@@ -293,8 +301,8 @@ class ComboStringEditor extends PropertyEditorSupport implements ItemListener, C
             if (this == other) {
                 return true;
             }
-            if (other instanceof UniqueObject) {
-                return propKey.equals(((UniqueObject) other).propKey);
+            if (other instanceof UniqueObject uniqueObject) {
+                return propKey.equals(uniqueObject.propKey);
             }
             return false;
         }
@@ -310,7 +318,7 @@ class ComboStringEditor extends PropertyEditorSupport implements ItemListener, C
         setAsText(initialEditValue);
     }
 
-    // Replace a string with its translation, if one exists
+    // Replace a string with its translation if one exists
     private String translate(String input) {
         if (validTranslations != null) {
             final String entry = validTranslations.get(input);

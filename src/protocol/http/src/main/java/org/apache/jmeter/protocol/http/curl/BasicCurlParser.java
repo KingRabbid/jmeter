@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +45,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.avalon.CLArgsParser;
 import org.apache.commons.cli.avalon.CLOption;
 import org.apache.commons.cli.avalon.CLOptionDescriptor;
-import org.apache.commons.io.FileUtils;
 import org.apache.jmeter.protocol.http.control.AuthManager.Mechanism;
 import org.apache.jmeter.protocol.http.control.Authorization;
 import org.apache.jmeter.protocol.http.control.Cookie;
@@ -518,9 +518,6 @@ public class BasicCurlParser {
             this.cookies = cookies;
         }
 
-        /* (non-Javadoc)
-         * @see java.lang.Object#toString()
-         */
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
@@ -846,40 +843,40 @@ public class BasicCurlParser {
         while (tok.hasMoreTokens()) {
             String nextTok = tok.nextToken();
             switch (state) {
-            case inQuote:
-                if ("\'".equals(nextTok)) {
-                    lastTokenHasBeenQuoted = true;
-                    state = normal;
-                } else {
-                    current.append(nextTok);
-                }
-                break;
-            case inDoubleQuote:
-                if ("\"".equals(nextTok)) {
-                    lastTokenHasBeenQuoted = true;
-                    state = normal;
-                } else {
-                    current.append(nextTok);
-                }
-                break;
-            default:
-                if ("\'".equals(nextTok)) {
-                    state = inQuote;
-                } else if ("\"".equals(nextTok)) {
-                    state = inDoubleQuote;
-                } else if (" ".equals(nextTok)) {
-                    if (lastTokenHasBeenQuoted || current.length() > 0) {
-                        result.add(current.toString());
-                        current.setLength(0);
+                case inQuote -> {
+                    if ("'".equals(nextTok)) {
+                        lastTokenHasBeenQuoted = true;
+                        state = normal;
+                    } else {
+                        current.append(nextTok);
                     }
-                } else {
-                    current.append(nextTok.replaceAll("^\\\\[\\r\\n]", ""));
                 }
-                lastTokenHasBeenQuoted = false;
-                break;
+                case inDoubleQuote -> {
+                    if ("\"".equals(nextTok)) {
+                        lastTokenHasBeenQuoted = true;
+                        state = normal;
+                    } else {
+                        current.append(nextTok);
+                    }
+                }
+                default -> {
+                    if ("'".equals(nextTok)) {
+                        state = inQuote;
+                    } else if ("\"".equals(nextTok)) {
+                        state = inDoubleQuote;
+                    } else if (" ".equals(nextTok)) {
+                        if (lastTokenHasBeenQuoted || !current.isEmpty()) {
+                            result.add(current.toString());
+                            current.setLength(0);
+                        }
+                    } else {
+                        current.append(nextTok.replaceAll("^\\\\[\\r\\n]", ""));
+                    }
+                    lastTokenHasBeenQuoted = false;
+                }
             }
         }
-        if (lastTokenHasBeenQuoted || current.length() > 0) {
+        if (lastTokenHasBeenQuoted || !current.isEmpty()) {
             result.add(current.toString());
         }
         if (state == inQuote || state == inDoubleQuote) {
@@ -910,14 +907,10 @@ public class BasicCurlParser {
     */
    private static void setAuthMechanism(String mechanism, Authorization authorization) {
        switch (mechanism.toLowerCase(Locale.ROOT)) {
-       case "basic":
-           authorization.setMechanism(Mechanism.BASIC);
-           break;
-       case "digest":
-           authorization.setMechanism(Mechanism.DIGEST);
-           break;
-       default:
-           break;
+           case "basic" -> authorization.setMechanism(Mechanism.BASIC);
+           case "digest" -> authorization.setMechanism(Mechanism.DIGEST);
+           default -> {
+           }
        }
    }
 
@@ -1045,7 +1038,7 @@ public class BasicCurlParser {
        File file = new File(filePath.trim());
        if (file.isFile() && file.exists()) {
            try {
-               return FileUtils.readFileToString(file, StandardCharsets.UTF_8.name());
+               return Files.readString(file.toPath());
            } catch (IOException e) {
                LOGGER.error("Failed to read from File {}", filePath, e);
                throw new IllegalArgumentException("Failed to read from File " + filePath);

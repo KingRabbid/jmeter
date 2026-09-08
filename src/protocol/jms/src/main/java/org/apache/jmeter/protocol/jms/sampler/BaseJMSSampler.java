@@ -21,17 +21,17 @@ import java.util.Date;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 /**
  *
@@ -58,7 +58,7 @@ public abstract class BaseJMSSampler extends AbstractSampler {
 
     private static final String CREDENTIALS = "jms.security_credentials"; // $NON-NLS-1$
 
-    /*
+    /**
      * The number of samples to aggregate
      */
     private static final String ITERATIONS = "jms.iterations"; // $NON-NLS-1$
@@ -67,7 +67,7 @@ public abstract class BaseJMSSampler extends AbstractSampler {
 
     private static final String USE_PROPERTIES_FILE = "jms.jndi_properties"; // $NON-NLS-1$
 
-    /*
+    /**
      * If true, store the response in the sampleResponse
      * (N.B. do not change the value, as it is used in JMX files)
      */

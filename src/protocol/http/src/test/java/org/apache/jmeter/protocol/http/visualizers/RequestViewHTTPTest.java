@@ -17,6 +17,8 @@
 
 package org.apache.jmeter.protocol.http.visualizers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,8 +27,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.jorphan.util.StringUtilities;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -162,34 +162,35 @@ class RequestViewHTTPTest {
 
     @Test
     void testGetQueryMapSoapHack() {
-        String query = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                + "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-                "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\"\n" +
-                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n" +
-                "    <SOAP-ENV:Header>\n" +
-                "        <m:Security\n" +
-                "xmlns:m=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\n" +
-                "            <UsernameToken>\n" +
-                "                <Username>hello</Username>\n" +
-                "                <Password>world</Password>\n" +
-                "            </UsernameToken>\n" +
-                "        </m:Security>\n" +
-                "    </SOAP-ENV:Header>\n" +
-                "    <SOAP-ENV:Body>     \n" +
-                "        <m:GeefPersoon xmlns:m=\"http://webservice.namespace\">\n" +
-                "            <Vraag>\n" +
-                "                <Context>\n" +
-                "                    <Naam>GeefPersoon</Naam>\n" +
-                "                    <Versie>01.00.0000</Versie>\n" +
-                "                </Context>\n" +
-                "                <Inhoud>\n" +
-                "                    <INSZ>650602505589</INSZ>\n" +
-                "                </Inhoud>\n" +
-                "            </Vraag>\n" +
-                "        </m:GeefPersoon>\n" +
-                "    </SOAP-ENV:Body>\n" +
-                "</SOAP-ENV:Envelope>";
+        String query = """
+                <?xml version="1.0" encoding="UTF-8"?>\
+                <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                    <SOAP-ENV:Header>
+                        <m:Security
+                xmlns:m="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                            <UsernameToken>
+                                <Username>hello</Username>
+                                <Password>world</Password>
+                            </UsernameToken>
+                        </m:Security>
+                    </SOAP-ENV:Header>
+                    <SOAP-ENV:Body>    \s
+                        <m:GeefPersoon xmlns:m="http://webservice.namespace">
+                            <Vraag>
+                                <Context>
+                                    <Naam>GeefPersoon</Naam>
+                                    <Versie>01.00.0000</Versie>
+                                </Context>
+                                <Inhoud>
+                                    <INSZ>650602505589</INSZ>
+                                </Inhoud>
+                            </Vraag>
+                        </m:GeefPersoon>
+                    </SOAP-ENV:Body>
+                </SOAP-ENV:Envelope>""";
         Map<String, String[]> params = RequestViewHTTP.getQueryMap(query);
 
         Assertions.assertNotNull(params);
@@ -233,9 +234,11 @@ class RequestViewHTTPTest {
         Map<String, String[]> params = RequestViewHTTP.getQueryMap(query);
         Assertions.assertNotNull(params);
         Assertions.assertEquals(expected.size(), params.size());
-        expected.forEach((key, values) -> {
-            MatcherAssert.assertThat(params, Matchers.hasKey(key));
-            Assertions.assertArrayEquals(values.toArray(), params.get(key));
-        });
+        expected.forEach((key, values) ->
+                assertEquals(
+                        values.toString(),
+                        Arrays.asList(params.get(key)).toString(),
+                        "RequestViewHTTP.getQueryMap(..).get(" + key + ")"
+                ));
     }
 }

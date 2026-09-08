@@ -27,21 +27,6 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.jms.BytesMessage;
-import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
-import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -63,6 +48,22 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.util.StringUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.jms.BytesMessage;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueBrowser;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSender;
+import jakarta.jms.QueueSession;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
 
 /**
  * This class implements the JMS Point-to-Point sampler
@@ -634,13 +635,12 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
         try {
             context = getInitialContext();
             Object obj = context.lookup(getQueueConnectionFactory());
-            if (!(obj instanceof QueueConnectionFactory)) {
+            if (!(obj instanceof QueueConnectionFactory factory)) {
                 String msg = "QueueConnectionFactory expected, but got "
                         + (obj != null ? obj.getClass().getName() : "null");
                 LOGGER.error(msg);
                 throw new IllegalStateException(msg);
             }
-            QueueConnectionFactory factory = (QueueConnectionFactory) obj;
             sendQueue = (Queue) context.lookup(getSendQueue());
 
             if (!useTemporyQueue()) {
@@ -779,7 +779,7 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
 
     public String getExpiration() {
         String expiration = getPropertyAsString(JMS_EXPIRATION);
-        if (expiration.length() == 0) {
+        if (expiration.isEmpty()) {
             return Utils.DEFAULT_NO_EXPIRY;
         } else {
             return expiration;
@@ -788,7 +788,7 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
 
     public String getPriority() {
         String priority = getPropertyAsString(JMS_PRIORITY);
-        if (priority.length() == 0) {
+        if (priority.isEmpty()) {
             return Utils.DEFAULT_PRIORITY_4;
         } else {
             return priority;

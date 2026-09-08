@@ -20,7 +20,6 @@ package org.apache.jmeter.protocol.http.sampler;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -44,7 +43,6 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -62,7 +60,6 @@ import org.apache.jmeter.protocol.http.parser.LinkExtractorParseException;
 import org.apache.jmeter.protocol.http.parser.LinkExtractorParser;
 import org.apache.jmeter.protocol.http.sampler.ResourcesDownloader.AsynSamplerResultHolder;
 import org.apache.jmeter.protocol.http.util.ConversionUtils;
-import org.apache.jmeter.protocol.http.util.DirectAccessByteArrayOutputStream;
 import org.apache.jmeter.protocol.http.util.EncoderCache;
 import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
@@ -79,12 +76,12 @@ import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.apache.jmeter.testelement.property.JMeterProperty;
-import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.testelement.schema.PropertiesAccessor;
 import org.apache.jmeter.testelement.schema.PropertyDescriptor;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.io.DirectAccessByteArrayOutputStream;
 import org.apache.jorphan.util.ExceptionUtils;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.jorphan.util.StringUtilities;
@@ -212,6 +209,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
     private static final boolean IGNORE_EMBEDDED_RESOURCES_DATA =
             JMeterUtils.getPropDefault("httpsampler.embedded_resources_use_md5", false); // $NON-NLS-1$ // default value: false
 
+    @SuppressWarnings("EnumOrdinal")
     public static final int SOURCE_TYPE_DEFAULT = HTTPSamplerBase.SourceType.HOSTNAME.ordinal();
 
     public static final String DEFAULT_METHOD = HTTPConstants.GET; // $NON-NLS-1$
@@ -409,7 +407,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
             return true;
         } else {
             boolean hasArguments = false;
-            for (JMeterProperty jMeterProperty : getArguments()) {
+            for (JMeterProperty jMeterProperty : getArguments().getEnabledArguments()) {
                 hasArguments = true;
                 HTTPArgument arg = (HTTPArgument) jMeterProperty.getObjectValue();
                 if (arg.getName() != null && !arg.getName().isEmpty()) {
@@ -731,18 +729,18 @@ public abstract class HTTPSamplerBase extends AbstractSampler
 
     @Override
     public void addTestElement(TestElement el) {
-        if (el instanceof CookieManager) {
-            setCookieManager((CookieManager) el);
-        } else if (el instanceof CacheManager) {
-            setCacheManager((CacheManager) el);
-        } else if (el instanceof HeaderManager) {
-            setHeaderManager((HeaderManager) el);
-        } else if (el instanceof AuthManager) {
-            setAuthManager((AuthManager) el);
-        } else if (el instanceof DNSCacheManager) {
-            setDNSResolver((DNSCacheManager) el);
-        } else if (el instanceof KeystoreConfig) {
-            setKeystoreConfigProperty((KeystoreConfig) el);
+        if (el instanceof CookieManager cookieManager) {
+            setCookieManager(cookieManager);
+        } else if (el instanceof CacheManager cacheManager) {
+            setCacheManager(cacheManager);
+        } else if (el instanceof HeaderManager headerManager) {
+            setHeaderManager(headerManager);
+        } else if (el instanceof AuthManager authManager) {
+            setAuthManager(authManager);
+        } else if (el instanceof DNSCacheManager dnsCacheManager) {
+            setDNSResolver(dnsCacheManager);
+        } else if (el instanceof KeystoreConfig keystoreConfig) {
+            setKeystoreConfigProperty(keystoreConfig);
         }  else {
             super.addTestElement(el);
         }
@@ -1155,9 +1153,10 @@ public abstract class HTTPSamplerBase extends AbstractSampler
      */
     public String getQueryString(final String contentEncoding) {
 
-        CollectionProperty arguments = getArguments().getArguments();
+        Arguments args = getArguments();
+        Iterator<JMeterProperty> iter = args.getEnabledArguments().iterator();
         // Optimisation : avoid building useless objects if empty arguments
-        if(arguments.isEmpty()) {
+        if (!iter.hasNext()) {
             return "";
         }
         String lContentEncoding = contentEncoding;
@@ -1167,8 +1166,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
             lContentEncoding = EncoderCache.URL_ARGUMENT_ENCODING;
         }
 
-        StringBuilder buf = new StringBuilder(arguments.size() * 15);
-        PropertyIterator iter = arguments.iterator();
+        StringBuilder buf = new StringBuilder(args.getArgumentCount() * 15);
         boolean first = true;
         while (iter.hasNext()) {
             HTTPArgument item = null;
@@ -1671,9 +1669,9 @@ public abstract class HTTPSamplerBase extends AbstractSampler
             // this behaviour.
             location = encodeSpaces(location);
             log.debug("Location after /. and space transforms: {}", location);
-            // Change all but HEAD into GET (Bug 55450)
+            // Compute method based on redirect status code (Bug 55450, RFC 9110)
             String method = lastRes.getHTTPMethod();
-            method = computeMethodForRedirect(method);
+            method = computeMethodForRedirect(method, lastRes.getResponseCode());
 
             try {
                 URL url = ConversionUtils.makeRelativeURL(lastRes.getURL(), location);
@@ -1737,13 +1735,25 @@ public abstract class HTTPSamplerBase extends AbstractSampler
     }
 
     /**
-     * See <a href="http://tools.ietf.org/html/rfc2616#section-10.3">RFC2616#section-10.3</a>
-     * JMeter conforms currently to HttpClient 4.5.2 supported RFC
-     * TODO Update when migrating to HttpClient 5.X using response code
+     * Compute the HTTP method to use for a redirect response.
+     *
+     * <ul>
+     *   <li>307/308: preserve method</li>
+     *   <li>301/302/303: HEAD stays HEAD, others become GET</li>
+     * </ul>
+     *
      * @param initialMethod the initial HTTP Method
-     * @return the new HTTP Method as per RFC
+     * @param responseCode the current redirect response code
+     * @return the HTTP Method to use for the redirected request
      */
-    private static String computeMethodForRedirect(String initialMethod) {
+    private static String computeMethodForRedirect(String initialMethod, String responseCode) {
+        // 307: RFC 9110 §15.4.8, 308: RFC 7538 §3 / RFC 9110 Errata 7109
+        // 307/308: preserve original method
+        if (HTTPConstants.SC_TEMPORARY_REDIRECT.equals(responseCode)
+                || HTTPConstants.SC_PERMANENT_REDIRECT.equals(responseCode)) {
+            return initialMethod;
+        }
+        // 301/302/303: HEAD stays HEAD, others become GET (Bug 55450)
         if (!HTTPConstants.HEAD.equalsIgnoreCase(initialMethod)) {
             return HTTPConstants.GET;
         }
@@ -1825,7 +1835,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
         return newValue.toString();
     }
 
-    /*
+    /**
      * Method to set files list to be uploaded.
      *
      * @param value
@@ -1835,7 +1845,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
         set(getSchema().getFileArguments(), value.getHTTPFileArgCount() == 0 ? null : value);
     }
 
-    /*
+    /**
      * Method to get files list to be uploaded.
      */
     private @Nullable HTTPFileArgs getHTTPFileArgs() {
@@ -1921,7 +1931,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
      */
     public byte[] readResponse(SampleResult sampleResult, InputStream in, long length) throws IOException {
 
-        OutputStream w = null;
+        DirectAccessByteArrayOutputStream w = null;
         try (Closeable ignore = in) { // NOSONAR No try with resource as performance is critical here
             byte[] readBuffer = new byte[8192]; // 8kB is the (max) size to have the latency ('the first packet')
             int bufferSize = 32;// Enough for MD5
@@ -1951,13 +1961,8 @@ public abstract class HTTPSamplerBase extends AbstractSampler
                 if (first) {
                     sampleResult.latencyEnd();
                     first = false;
-                    if(md == null) {
-                        if(!knownResponseLength) {
-                            w = new org.apache.commons.io.output.ByteArrayOutputStream(bufferSize);
-                        }
-                        else {
-                            w = new DirectAccessByteArrayOutputStream(bufferSize);
-                        }
+                    if (md == null) {
+                        w = new DirectAccessByteArrayOutputStream(knownResponseLength ? bufferSize : 8192);
                     }
                 }
 
@@ -1985,7 +1990,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
             }
 
             if (md == null) {
-                return toByteArray(w);
+                return w.toByteArray();
             } else {
                 byte[] md5Result = md.digest();
                 sampleResult.setBytes(totalBytes);
@@ -1993,27 +1998,8 @@ public abstract class HTTPSamplerBase extends AbstractSampler
             }
 
         } finally {
-            IOUtils.closeQuietly(w, null);
+            JOrphanUtils.closeQuietly(w);
         }
-    }
-
-    /**
-     * Optimized method to get byte array from {@link OutputStream}
-     * @param w {@link OutputStream}
-     * @return byte array
-     */
-    private static byte[] toByteArray(OutputStream w) {
-        if(w instanceof DirectAccessByteArrayOutputStream) {
-            return ((DirectAccessByteArrayOutputStream) w).toByteArray();
-        }
-
-        if(w instanceof org.apache.commons.io.output.ByteArrayOutputStream) {
-            return ((org.apache.commons.io.output.ByteArrayOutputStream) w).toByteArray();
-        }
-
-        log.warn("Unknown stream type {}", w.getClass());
-
-        return null;
     }
 
     /**

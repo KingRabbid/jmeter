@@ -17,12 +17,9 @@
 
 package org.apache.jmeter.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 public class JSR223TestElementTest {
 
@@ -31,18 +28,9 @@ public class JSR223TestElementTest {
     };
 
     @Test
-    @DisabledForJreRange(min = JRE.JAVA_15, max = JRE.OTHER, disabledReason = "The default JavaScript engine has been removed in Java 15+")
-    public void testGetScriptEngineJS() throws Exception {
-        element.setScriptLanguage("JavaScript");
-        assertThat(element.getScriptEngine().getFactory().getLanguageName(),
-                CoreMatchers.containsString("Script"));
-    }
-
-    @Test
     public void testGetScriptEngineDefault() throws Exception {
         element.setScriptLanguage("");
-        assertThat(element.getScriptEngine().getFactory().getLanguageName(),
-                CoreMatchers.is("Groovy"));
+        assertEquals("Groovy", element.getScriptEngine().getFactory().getLanguageName());
     }
 
 }

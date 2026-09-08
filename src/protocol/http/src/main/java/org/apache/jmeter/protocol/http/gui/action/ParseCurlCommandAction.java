@@ -28,7 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +50,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.tree.TreePath;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.KeystoreConfig;
 import org.apache.jmeter.control.Controller;
@@ -105,11 +105,8 @@ import org.apache.jorphan.gui.ComponentUtil;
 import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.apache.jorphan.util.StringUtilities;
 import org.apache.tika.Tika;
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.exception.TikaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import com.google.auto.service.AutoService;
 
@@ -138,16 +135,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
     private JSyntaxTextArea cURLCommandTA;
     private JLabel statusText;
     private JCheckBox uploadCookiesCheckBox;
-    private final Tika tika = createTika();
-
-    private Tika createTika() {
-        try {
-            return new Tika(new TikaConfig(this.getClass().getClassLoader()
-                    .getResourceAsStream("org/apache/jmeter/protocol/http/gui/action/tika-config.xml")));
-        } catch (TikaException | IOException | SAXException e) {
-            return new Tika();
-        }
-    }
+    private final Tika tika = new Tika();
 
     public ParseCurlCommandAction() {
         super();
@@ -587,23 +575,13 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         for (Map.Entry<String, String> proxyPara : proxyServer.entrySet()) {
             String key = proxyPara.getKey();
             switch (key) {
-            case "servername":
-                httpSampler.setProxyHost(proxyPara.getValue());
-                break;
-            case "port":
-                httpSampler.setProxyPortInt(proxyPara.getValue());
-                break;
-            case "scheme":
-                httpSampler.setProxyScheme(proxyPara.getValue());
-                break;
-            case "username":
-                httpSampler.setProxyUser(proxyPara.getValue());
-                break;
-            case "password":
-                httpSampler.setProxyPass(proxyPara.getValue());
-                break;
-            default:
-                break;
+                case "servername" -> httpSampler.setProxyHost(proxyPara.getValue());
+                case "port" -> httpSampler.setProxyPortInt(proxyPara.getValue());
+                case "scheme" -> httpSampler.setProxyScheme(proxyPara.getValue());
+                case "username" -> httpSampler.setProxyUser(proxyPara.getValue());
+                case "password" -> httpSampler.setProxyPass(proxyPara.getValue());
+                default -> {
+                }
             }
         }
     }
@@ -815,9 +793,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
     }
 
     public List<String> readFromFile(String pathname) throws IOException {
-        String encoding = StandardCharsets.UTF_8.name();
-        File file = new File(pathname);
-        return FileUtils.readLines(file, encoding);
+        return Files.readAllLines(Path.of(pathname));
     }
 
     public List<String> readFromTextPanel(String commands) {

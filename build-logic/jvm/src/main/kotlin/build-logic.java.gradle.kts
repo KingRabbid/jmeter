@@ -88,7 +88,8 @@ dependencies {
 tasks.register<DependencyInsightReportTask>("allDependencyInsight") {
     group = HelpTasksPlugin.HELP_GROUP
     description =
-        "Shows insights where the dependency is used. For instance: allDependencyInsight --configuration compile --dependency org.jsoup:jsoup"
+        "Shows insights where the dependency is used. For instance: allDependencyInsight --configuration compileClasspath --dependency org.jsoup:jsoup"
+    showingAllVariants = false
 }
 
 tasks.configureEach<JavaCompile> {
@@ -130,14 +131,14 @@ tasks.configureEach<Javadoc> {
         docTitle = "Apache JMeter ${project.name} API"
         windowTitle = "Apache JMeter ${project.name} API"
         header = "<b>Apache JMeter</b>"
-        addStringOption("source", "17")
+        addStringOption("source", "21")
         addStringOption("Xmaxwarns", "10")
         addBooleanOption("Xdoclint:all,-missing", true)
         val lastEditYear: String by rootProject.extra
         bottom =
             "Copyright &copy; 1998-$lastEditYear Apache Software Foundation. All Rights Reserved."
         addBooleanOption("html5", true)
-        links("https://docs.oracle.com/en/java/javase/17/docs/api/")
+        links("https://docs.oracle.com/en/java/javase/21/docs/api/")
     }
 }
 

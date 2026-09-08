@@ -27,7 +27,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
@@ -42,6 +41,7 @@ import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.util.EntityUtils;
 import org.apache.jmeter.report.utils.MetricUtils;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.jorphan.util.StringUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,12 +197,10 @@ class HttpMetricsSender extends AbstractInfluxdbMetricsSender {
                 @Override
                 public void completed(final HttpResponse response) {
                     int code = response.getStatusLine().getStatusCode();
-                    /*
-                     * If your write request received HTTP
-                     * 204 No Content: it was a success!
-                     * 4xx: InfluxDB could not understand the request.
-                     * 5xx: The system is overloaded or significantly impaired.
-                     */
+                    // If your write request received HTTP
+                    // 204 No Content: it was a success!
+                    // 4xx: InfluxDB could not understand the request.
+                    // 5xx: The system is overloaded or significantly impaired.
                     if (MetricUtils.isSuccessCode(code)) {
                         if (log.isDebugEnabled()) {
                             log.debug("Success, number of metrics written: {}", copyMetrics.size());
@@ -244,7 +242,6 @@ class HttpMetricsSender extends AbstractInfluxdbMetricsSender {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void destroy() {
         // Give some time to send last metrics before shutting down
         log.info("Destroying ");
@@ -256,7 +253,7 @@ class HttpMetricsSender extends AbstractInfluxdbMetricsSender {
         if (httpRequest != null) {
             httpRequest.abort();
         }
-        IOUtils.closeQuietly(httpClient, null);
+        JOrphanUtils.closeQuietly(httpClient);
     }
 
 }

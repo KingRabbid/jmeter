@@ -21,9 +21,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
 import java.util.function.Function;
 
 import javax.script.Bindings;
@@ -296,13 +300,13 @@ public abstract class JSR223TestElement extends ScriptingTestElement
             return compiledScript;
         } catch (ScriptCompilationInvocationTargetException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof IOException) {
+            if (cause instanceof IOException ioException) {
                 cause.addSuppressed(new IllegalStateException("Unable to compile JSR223 script: " + newCacheKey));
-                throw (IOException) cause;
+                throw ioException;
             }
-            if (cause instanceof ScriptException) {
+            if (cause instanceof ScriptException scriptException) {
                 cause.addSuppressed(new IllegalStateException("Unable to compile JSR223 script: " + newCacheKey));
-                throw (ScriptException) cause;
+                throw scriptException;
             }
             throw e;
         } finally {

@@ -59,6 +59,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.apache.jmeter.gui.GuiPackage;
+import org.apache.jmeter.save.JMeterStaxDriver;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jorphan.gui.JFactory;
 import org.apache.jorphan.gui.JMeterUIDefaults;
@@ -80,6 +81,8 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
+import com.thoughtworks.xstream.io.xml.StaxDriver;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 import com.thoughtworks.xstream.security.NoTypePermission;
 
@@ -99,7 +102,7 @@ public class JMeterUtils implements UnitTestManager {
         private LazyPatternCacheHolder() {
             super();
         }
-        public static final PatternCacheLRU INSTANCE = new PatternCacheLRU(
+        private static final PatternCacheLRU INSTANCE = new PatternCacheLRU(
                 getPropDefault("oro.patterncache.size",1000), // $NON-NLS-1$
                 new Perl5Compiler());
     }
@@ -108,7 +111,7 @@ public class JMeterUtils implements UnitTestManager {
         private LazyJavaPatternCacheHolder() {
             super();
         }
-        public static final LoadingCache<Map.Entry<String, Integer>, java.util.regex.Pattern> INSTANCE =
+        private static final LoadingCache<Map.Entry<String, Integer>, java.util.regex.Pattern> INSTANCE =
                 Caffeine
                         .newBuilder()
                         .maximumSize(getPropDefault("jmeter.regex.patterncache.size", 1000))
@@ -1415,8 +1418,8 @@ public class JMeterUtils implements UnitTestManager {
     /**
      * @return {@link XStream} XStream instance following JMeter security policy
      */
-    public static final XStream createXStream() {
-        XStream xstream = new XStream();
+    public static XStream createXStream() {
+        XStream xstream = new XStream(new PureJavaReflectionProvider(), new JMeterStaxDriver());
         JMeterUtils.setupXStreamSecurityPolicy(xstream);
         return xstream;
     }

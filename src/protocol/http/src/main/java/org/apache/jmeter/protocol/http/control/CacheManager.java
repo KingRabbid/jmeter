@@ -109,7 +109,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
         setProperty(new BooleanProperty(CONTROLLED_BY_THREAD, control));
     }
 
-    /*
+    /**
      * Holder for storing cache details.
      * Perhaps add original response later?
      */
@@ -272,25 +272,19 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
                 // else expiresDate computed in (expires!=null) condition is used
             }
         }
+        Cache<String, CacheEntry> cache = getCache();
         if (varyHeader != null) {
             if (log.isDebugEnabled()) {
                 log.debug("Set entry into cache for url {} and vary {} ({})", url,
                         varyHeader,
                         varyUrl(url, varyHeader.getKey(), varyHeader.getValue()));
             }
-            getCache().put(url, new CacheEntry(lastModified, expiresDate, etag, varyHeader.getKey()));
-            getCache().put(varyUrl(url, varyHeader.getKey(), varyHeader.getValue()), new CacheEntry(lastModified, expiresDate, etag, null));
-        } else {
-            // Makes expiresDate effectively-final
-            Date entryExpiresDate = expiresDate;
-            var unused = getCache().get(
-                    url,
-                    key -> {
-                        CacheEntry cacheEntry = new CacheEntry(lastModified, entryExpiresDate, etag, null);
-                        log.debug("Set entry {} into cache for url {}", url, cacheEntry);
-                        return cacheEntry;
-                    }
-            );
+            cache.put(url, new CacheEntry(lastModified, expiresDate, etag, varyHeader.getKey()));
+            cache.put(varyUrl(url, varyHeader.getKey(), varyHeader.getValue()), new CacheEntry(lastModified, expiresDate, etag, null));
+        } else if (cache.getIfPresent(url) == null) {
+            CacheEntry cacheEntry = new CacheEntry(lastModified, expiresDate, etag, null);
+            log.debug("Set entry {} into cache for url {}", url, cacheEntry);
+            cache.put(url, cacheEntry);
         }
     }
 
@@ -367,7 +361,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
         return hdr != null ? hdr.getValue() : null;
     }
 
-    /*
+    /**
      * Is the sample result OK to cache?
      * i.e is it in the 2xx range or equal to 304, and is it a cacheable method?
      */
@@ -497,7 +491,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
 
         private final org.apache.jmeter.protocol.http.control.Header delegate;
 
-        public HeaderAdapter(org.apache.jmeter.protocol.http.control.Header delegate) {
+        private HeaderAdapter(org.apache.jmeter.protocol.http.control.Header delegate) {
             this.delegate = delegate;
         }
 

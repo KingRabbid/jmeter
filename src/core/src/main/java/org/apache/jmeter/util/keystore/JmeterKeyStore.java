@@ -34,12 +34,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jorphan.util.StringUtilities;
 import org.slf4j.Logger;
@@ -149,9 +149,7 @@ public final class JmeterKeyStore {
             }
         }
 
-        /*
-         * Note: if is == null and no pkcs11 store is configured, the arrays will be empty
-         */
+        // Note: if is == null and no pkcs11 store is configured, the arrays will be empty
         this.names = aliasesList.toArray(new String[aliasesList.size()]);
     }
 
@@ -229,8 +227,7 @@ public final class JmeterKeyStore {
         for (List<?> entry : subjectAlternativeNames) {
             Object indexData = entry.get(0);
             Object data = entry.get(1);
-            if (indexData instanceof Integer) {
-                Integer generalNameIndex = (Integer) indexData;
+            if (indexData instanceof Integer generalNameIndex) {
                 String description = sanGeneralNameIndexToName(generalNameIndex);
                 String valueString = sanDataToString(data);
                 decodedEntries.add(Map.entry(description, valueString));
@@ -242,10 +239,10 @@ public final class JmeterKeyStore {
     }
 
     private static String sanDataToString(Object data) {
-        if (data instanceof String) {
-            return (String) data;
+        if (data instanceof String s) {
+            return s;
         }
-        return Hex.encodeHexString((byte[]) data);
+        return HexFormat.of().formatHex((byte[]) data);
     }
 
     private static String sanGeneralNameIndexToName(Integer index) {
