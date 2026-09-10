@@ -21,13 +21,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Properties;
 import java.util.function.Function;
 
 import javax.script.Bindings;
@@ -37,7 +33,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.TestStateListener;
@@ -45,6 +40,7 @@ import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jorphan.util.JOrphanUtils;
+import org.apache.jorphan.util.StringUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +142,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
      */
     private String getScriptLanguageWithDefault() {
         String lang = getScriptLanguage();
-        if (lang != null && !lang.isEmpty()) {
+        if (StringUtilities.isNotEmpty(lang)) {
             return lang;
         }
         return DEFAULT_SCRIPT_LANGUAGE;
@@ -185,7 +181,6 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         bindings.put("prev", prev); // $NON-NLS-1$ (this name is fixed)
     }
 
-
     /**
      * This method will run inline script or file script with special behaviour for file script:
      * - If ScriptEngine implements Compilable script will be compiled and cached
@@ -209,7 +204,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         boolean supportsCompilable = scriptEngine instanceof Compilable
                 && !"bsh.engine.BshScriptEngine".equals(scriptEngine.getClass().getName()); // NOSONAR // $NON-NLS-1$
         try {
-            if (filename != null && !filename.isEmpty()) {
+            if (StringUtilities.isNotEmpty(filename)) {
                 File scriptFile = new File(filename);
                 if (!scriptFile.isFile()) {
                     throw new ScriptException("Script file '" + scriptFile.getAbsolutePath()
@@ -239,7 +234,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
             }
 
             String script = getScript();
-            if (script != null && !script.isEmpty()) {
+            if (StringUtilities.isNotEmpty(script)) {
                 if (supportsCompilable) {
                     long start = System.nanoTime();
                     try {
@@ -330,7 +325,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         if(!supportsCompilable) {
             return true;
         }
-        if (!(getScript() == null || getScript().isEmpty())) {
+        if (StringUtilities.isNotEmpty(getScript())) {
             try {
                 ((Compilable) scriptEngine).compile(getScript());
                 return true;
@@ -360,7 +355,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         try {
             if (scriptCacheKey == null) {
                 // compute the md5 of the script if needed
-                scriptCacheKey = ScriptCacheKey.ofString(DigestUtils.md5Hex(script));
+                scriptCacheKey = ScriptCacheKey.ofDigest(script.getBytes());
                 keys2Names.put(scriptCacheKey, getName());
             }
         } finally {
@@ -394,7 +389,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         long start = System.nanoTime();
         try {
             if (scriptCacheKey == null) {
-                scriptCacheKey = ScriptCacheKey.ofString(Integer.toString(reference));
+                scriptCacheKey = ScriptCacheKey.ofDigest(Integer.toString(reference).getBytes());
                 keys2Names.put(scriptCacheKey, getName());
             }
         } finally {
