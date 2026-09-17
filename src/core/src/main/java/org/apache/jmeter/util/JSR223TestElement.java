@@ -21,8 +21,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -60,7 +65,10 @@ public abstract class JSR223TestElement extends ScriptingTestElement
     /**
      * Cache of compiled scripts
      */
-    private static Cache<ScriptCacheKey, CompiledScript> COMPILED_SCRIPT_CACHE;
+    private static final Cache<ScriptCacheKey, CompiledScript> COMPILED_SCRIPT_CACHE = Caffeine.from(
+            JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_spec", "maximumSize=" +
+            JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100) + ",recordStats")
+    ).build();
 
     /**
      * Used for locking cache initialization
@@ -109,7 +117,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         private LazyHolder() {
             super();
         }
-        public static final ScriptEngineManager INSTANCE = new ScriptEngineManager();
+        static final ScriptEngineManager INSTANCE = new ScriptEngineManager();
     }
 
     /**
@@ -254,7 +262,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
                         } else {
                             computeScriptCacheKey(script.hashCode());
                             //simulate a cache miss when JSR223 'Cache compiled script if available' is unchecked to have better view of cache usage
-                            COMPILED_SCRIPT_CACHE.get(scriptCacheKey, k -> {
+                            var unused = COMPILED_SCRIPT_CACHE.get(scriptCacheKey, k -> {
                                 return null;
                             });
                             if (logger.isDebugEnabled()) {
@@ -355,7 +363,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         try {
             if (scriptCacheKey == null) {
                 // compute the md5 of the script if needed
-                scriptCacheKey = ScriptCacheKey.ofDigest(script.getBytes());
+                scriptCacheKey = ScriptCacheKey.ofDigest(script.getBytes(Charset.defaultCharset()));
                 keys2Names.put(scriptCacheKey, getName());
             }
         } finally {
@@ -389,7 +397,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         long start = System.nanoTime();
         try {
             if (scriptCacheKey == null) {
-                scriptCacheKey = ScriptCacheKey.ofDigest(Integer.toString(reference).getBytes());
+                scriptCacheKey = ScriptCacheKey.ofDigest(Integer.toString(reference).getBytes(Charset.defaultCharset()));
                 keys2Names.put(scriptCacheKey, getName());
             }
         } finally {
@@ -427,13 +435,6 @@ public abstract class JSR223TestElement extends ScriptingTestElement
      */
     @Override
     public void testStarted(String host) {
-        synchronized (lock) {
-            if (COMPILED_SCRIPT_CACHE == null) {
-                COMPILED_SCRIPT_CACHE =
-                        Caffeine.from(JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_spec", "maximumSize=" +
-                                JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100) + ",recordStats")).build();
-            }
-        }
     }
 
     /**
@@ -464,7 +465,6 @@ public abstract class JSR223TestElement extends ScriptingTestElement
                         String.format("%.02f", (stats.totalLoadTime() / ns2ms)), String.format("%.02f", (stats.averageLoadPenalty() / ns2ms)));
                 COMPILED_SCRIPT_CACHE.invalidateAll();
                 COMPILED_SCRIPT_CACHE.cleanUp();
-                COMPILED_SCRIPT_CACHE = null;
 
                 int topLimit = getTopContributorsLimit();
                 if (topLimit > 0) {

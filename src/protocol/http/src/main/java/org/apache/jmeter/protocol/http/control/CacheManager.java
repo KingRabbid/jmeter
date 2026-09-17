@@ -165,7 +165,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
             return varyHeader;
         }
 
-        /* (non-Javadoc)
+        /** (non-Javadoc)
          * @see java.lang.Object#toString()
          */
         @Override
