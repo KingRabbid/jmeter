@@ -22,7 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -60,7 +64,10 @@ public abstract class JSR223TestElement extends ScriptingTestElement
     /**
      * Cache of compiled scripts
      */
-    private static Cache<ScriptCacheKey, CompiledScript> COMPILED_SCRIPT_CACHE;
+    private static final Cache<ScriptCacheKey, CompiledScript> COMPILED_SCRIPT_CACHE = Caffeine.from(
+            JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_spec", "maximumSize=" +
+            JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100) + ",recordStats")
+    ).build();
 
     /**
      * Used for locking cache initialization
@@ -109,7 +116,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
         private LazyHolder() {
             super();
         }
-        public static final ScriptEngineManager INSTANCE = new ScriptEngineManager();
+        static final ScriptEngineManager INSTANCE = new ScriptEngineManager();
     }
 
     /**
@@ -428,13 +435,6 @@ public abstract class JSR223TestElement extends ScriptingTestElement
      */
     @Override
     public void testStarted(String host) {
-        synchronized (lock) {
-            if (COMPILED_SCRIPT_CACHE == null) {
-                COMPILED_SCRIPT_CACHE =
-                        Caffeine.from(JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_spec", "maximumSize=" +
-                                JMeterUtils.getPropDefault("jsr223.compiled_scripts_cache_size", 100) + ",recordStats")).build();
-            }
-        }
     }
 
     /**
@@ -451,7 +451,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
     @Override
     public void testEnded(String host) {
         synchronized (lock) {
-            if (COMPILED_SCRIPT_CACHE != null) {
+            if (COMPILED_SCRIPT_CACHE.asMap().size() > 0) {
                 CacheStats stats = COMPILED_SCRIPT_CACHE.stats();
                 logger.info("JSR223 cache stats => scripts: {}, requestsCount: {} (hitCount: {} + missedCount: {}), (hitRate: {}, missRate: {}), " +
                                 "loadCount: {} (loadSuccessCount: {} + loadFailureCount: {}), " +
@@ -465,7 +465,6 @@ public abstract class JSR223TestElement extends ScriptingTestElement
                         String.format("%.02f", (stats.totalLoadTime() / ns2ms)), String.format("%.02f", (stats.averageLoadPenalty() / ns2ms)));
                 COMPILED_SCRIPT_CACHE.invalidateAll();
                 COMPILED_SCRIPT_CACHE.cleanUp();
-                COMPILED_SCRIPT_CACHE = null;
 
                 int topLimit = getTopContributorsLimit();
                 if (topLimit > 0) {
