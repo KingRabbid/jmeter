@@ -451,7 +451,7 @@ public abstract class JSR223TestElement extends ScriptingTestElement
     @Override
     public void testEnded(String host) {
         synchronized (lock) {
-            if (COMPILED_SCRIPT_CACHE != null) {
+            if (COMPILED_SCRIPT_CACHE.asMap().size() > 0) {
                 CacheStats stats = COMPILED_SCRIPT_CACHE.stats();
                 logger.info("JSR223 cache stats => scripts: {}, requestsCount: {} (hitCount: {} + missedCount: {}), (hitRate: {}, missRate: {}), " +
                                 "loadCount: {} (loadSuccessCount: {} + loadFailureCount: {}), " +
