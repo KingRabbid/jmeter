@@ -236,6 +236,10 @@ Defaults to: <code>true</code>
     Defaults to: <code>19x19</code><br/>
     Suggested value for HiDPI screen like 3200x1800 is: <code>32x32</code>
 </property>
+  <property name="jmeter.tree.width">
+    Default width of the tree window.<br/>
+    Defaults to: <code>150</code><br/>
+  </property>
 <property name="jmeter.hidpi.mode">
     HiDPI mode. Activate a '<em>pseudo</em>'-HiDPI mode. Allows to increase size of some UI
     elements which are not correctly managed by JVM with high resolution screens in Linux or Windows.<br/>
