@@ -622,7 +622,8 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
      */
     private JScrollPane createTreePanel() {
         JScrollPane treeP = new JScrollPane(tree);
-        treeP.setMinimumSize(new Dimension(JMeterUtils.getPropDefault("jmeter.tree.width", 150), 0));
+        treeP.setMinimumSize(new Dimension(100, 0));
+        treeP.setPreferredSize(new Dimension(JMeterUtils.getPropDefault("jmeter.tree.width", 150), 0));
         return treeP;
     }
 
